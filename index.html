@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Control Última Milla v11</title>
+    <title>Sistema de Control Última Milla v12</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -35,8 +35,8 @@
 
     <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-2 flex flex-col min-h-[650px]">
         <header class="bg-slate-800 text-white p-4 text-center">
-            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v11</h1>
-            <p class="text-xs text-slate-400 mt-0.5">Control de Incidencias Manual y Plazo 3 Limpio</p>
+            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v12</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Control de Incidencias por Firma de Rescate</p>
         </header>
 
         <nav class="flex border-b border-gray-200 bg-gray-50 text-center">
@@ -192,15 +192,15 @@
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 text-center shadow-2xl border-4 border-red-500">
             <div class="text-red-500 text-4xl mb-1">⚠️</div>
             <h3 class="text-lg font-extrabold text-red-600 uppercase tracking-tight">¡REINCIDENTE DETECTADO!</h3>
-            <p class="text-gray-700 mt-1 text-xs">El celular ingresado le pertenece a <span id="alertaNombre" class="font-bold text-black text-sm"></span> y cuenta con un reporte manual de bloqueo.</p>
+            <p class="text-gray-700 mt-1 text-xs">El cliente <span id="alertaNombre" class="font-bold text-black text-sm"></span> está acostumbrado a estar yendo a firmar solicitudes de rescate para retrasar retornos.</p>
             <div class="bg-red-50 p-2.5 rounded-lg my-3 text-[11px] text-red-800 font-mono font-bold leading-tight">PROHIBIDA SEGUNDA OPORTUNIDAD.<br>REGRESAR PAQUETE A ORIGEN DE INMEDIATO.</div>
             <button onclick="cerrarAlerta()" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-xs transition">Entendido / Bloquear Entrada</button>
         </div>
     </div>
 
     <script>
-        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v11')) || [];
-        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v11')) || [];
+        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v12')) || [];
+        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v12')) || [];
         let ESTADO_FILTRO_ACTUAL = "Todos";
 
         // CANVAS DE FIRMA
@@ -281,7 +281,7 @@
 
         function detectarClienteRapido() {
             const telefono = document.getElementById('inputTelefono').value.trim();
-            const cliente = DB_CLIENTES.find(c => c.telefono === telefono);
+            const cliente = DB_CLIENTES.find(c => c.telefono === phone = telefono);
             if (cliente) {
                 if (cliente.incidencias > 0) {
                     document.getElementById('alertaNombre').textContent = cliente.nombre;
@@ -314,24 +314,24 @@
                     return;
                 }
                 clientePorTelefono.nombre = nombre;
-                localStorage.setItem('db_clientes_v11', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v12', JSON.stringify(DB_CLIENTES));
             } else {
                 DB_CLIENTES.push({ id: Date.now(), nombre: nombre, telefono: telefono, incidencias: 0 });
-                localStorage.setItem('db_clientes_v11', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v12', JSON.stringify(DB_CLIENTES));
             }
 
             DB_PAQUETES.push({
                 id: Date.now(),
                 guia: guia,
                 telefono: telefono,
-                nombre: name = nombre,
+                nombre: nombre,
                 estado: "Dia 1",
                 fecha: new Date().toLocaleString(),
                 firma: null,
                 archivado: false
             });
 
-            localStorage.setItem('db_paquetes_v11', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v12', JSON.stringify(DB_PAQUETES));
             alert("✅ Paquete ingresado con éxito en Día 1.");
             document.getElementById('formRegistro').reset();
         }
@@ -400,7 +400,7 @@
 
             if (confirm(`¿Deseas archivar ${listos.length} paquetes finalizados?`)) {
                 DB_PAQUETES.forEach(p => { if (p.estado === "Dia 3" || p.estado === "Entregado") p.archivado = true; });
-                localStorage.setItem('db_paquetes_v11', JSON.stringify(DB_PAQUETES));
+                localStorage.setItem('db_paquetes_v12', JSON.stringify(DB_PAQUETES));
                 document.getElementById('switchArchivo').value = "activos";
                 listarPaquetes();
                 alert("🗂️ Corte guardado e historial actualizado.");
@@ -463,6 +463,16 @@
             if (idx === -1) return;
 
             const p = DB_PAQUETES[idx];
+            
+            // REGLA CRÍTICA NUEVA: Si pasa a DÍA 2 por primera vez en esta edición, le sumamos el castigo por "mañoso"
+            if (est === "Dia 2" && p.estado !== "Dia 2") {
+                const cli = DB_CLIENTES.find(c => c.telefono === p.telefono);
+                if (cli) {
+                    cli.incidencias += 1;
+                    localStorage.setItem('db_clientes_v12', JSON.stringify(DB_CLIENTES));
+                }
+            }
+
             p.estado = est;
 
             if (est === "Dia 2" || est === "Entregado") {
@@ -472,17 +482,16 @@
                 }
             }
 
-            // CORRECCIÓN REQUERIDA: Ya NO se penaliza automáticamente al pasar a Día 3 (Limpio para el cliente)
-            localStorage.setItem('db_paquetes_v11', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v12', JSON.stringify(DB_PAQUETES));
             document.getElementById('modalEditar').classList.add('hidden');
             limpiarFirma();
             listarPaquetes();
-            alert("🔄 Estatus del paquete actualizado.");
+            alert("🔄 Estatus del paquete y penalización de historial actualizados.");
         }
 
         function cerrarModalEditar() { document.getElementById('modalEditar').classList.add('hidden'); limpiarFirma(); }
 
-        // PESTAÑA CLIENTES CON REPORTE MANUAL
+        // PESTAÑA CLIENTES
         function listarClientes() {
             const f = document.getElementById('buscarCliente').value.toLowerCase().trim();
             const cont = document.getElementById('contenedorClientes');
@@ -492,12 +501,8 @@
 
             filtrados.forEach(c => {
                 let color = c.incidencias > 0 ? "bg-red-100 text-red-800 font-bold" : "bg-green-100 text-green-800";
-                let txt = c.incidencias > 0 ? `⚠️ BLOQUEADO` : "🟢 Limpio";
-                
-                // Botón dinámico: si está limpio se puede Reportar/Bloquear, si está bloqueado se puede Perdonar
-                let botonAccionIncidencia = c.incidencias > 0 
-                    ? `<button onclick="perdonar(${c.id})" class="bg-green-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-green-700 transition">🟢 Perdonar</button>`
-                    : `<button onclick="reportarManual(${c.id})" class="bg-red-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-red-700 transition">⚠️ Reportar</button>`;
+                let txt = c.incidencias > 0 ? `⚠️ REINCIDENTE (${c.incidencias})` : "🟢 Limpio";
+                let btnPerdonar = c.incidencias > 0 ? `<button onclick="perdonar(${c.id})" class="bg-green-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-green-700 transition">🟢 Perdonar</button>` : "";
 
                 const div = document.createElement('div');
                 div.className = "bg-white border border-gray-200 p-3 rounded-xl shadow-xs text-xs flex justify-between items-center";
@@ -508,23 +513,12 @@
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="px-2 py-1 rounded text-[10px] ${color}">${txt}</span>
-                        ${botonAccionIncidencia}
+                        ${btnPerdonar}
                         <button onclick="abrirModalEditarCliente(${c.id})" class="bg-gray-700 text-white px-2 py-0.5 rounded text-[10px] font-bold hover:bg-gray-800 transition">✏️ Editar</button>
                     </div>
                 `;
                 cont.appendChild(div);
             });
-        }
-
-        // NUEVA FUNCIÓN: AGREGAR REINCIDENCIA DE FORMA MANUAL Y CONTROLADA
-        function reportarManual(id) {
-            const idx = DB_CLIENTES.findIndex(c => c.id === id);
-            if (idx !== -1 && confirm(`¿Estás seguro de mandar a la lista de bloqueo a ${DB_CLIENTES[idx].nombre.toUpperCase()}? Ya no se le podrán registrar más paquetes.`)) {
-                DB_CLIENTES[idx].incidencias = 1;
-                localStorage.setItem('db_clientes_v11', JSON.stringify(DB_CLIENTES));
-                listarClientes();
-                alert("⚠️ Cliente enviado a la lista de bloqueo con éxito.");
-            }
         }
 
         function abrirModalEditarCliente(id) {
@@ -551,8 +545,8 @@
             DB_PAQUETES.forEach(p => { if (p.telefono === telefonoViejo) { p.nombre = nom; p.telefono = tel; } });
 
             DB_CLIENTES[idx].nombre = nom; DB_CLIENTES[idx].telefono = tel;
-            localStorage.setItem('db_clientes_v11', JSON.stringify(DB_CLIENTES));
-            localStorage.setItem('db_paquetes_v11', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_clientes_v12', JSON.stringify(DB_CLIENTES));
+            localStorage.setItem('db_paquetes_v12', JSON.stringify(DB_PAQUETES));
             
             document.getElementById('modalEditarCliente').classList.add('hidden');
             listarClientes();
@@ -561,9 +555,9 @@
 
         function perdonar(id) {
             const idx = DB_CLIENTES.findIndex(c => c.id === id);
-            if (idx !== -1 && confirm(`¿Quitar bloqueo y limpiar el historial de ${DB_CLIENTES[idx].nombre}?`)) {
+            if (idx !== -1 && confirm(`¿Limpiar incidencias de rescate y desbloquear a ${DB_CLIENTES[idx].nombre}?`)) {
                 DB_CLIENTES[idx].incidencias = 0;
-                localStorage.setItem('db_clientes_v11', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v12', JSON.stringify(DB_CLIENTES));
                 listarClientes();
             }
         }
