@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Control Última Milla</title>
+    <title>Sistema de Control Última Milla v4</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         #canvasFirma {
             border: 2px dashed #cbd5e1;
             background-color: #f8fafc;
-            touch-action: none; /* Crucial: Evita que la pantalla se mueva al firmar */
+            touch-action: none;
         }
     </style>
 </head>
@@ -18,8 +18,8 @@
 
     <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-2 flex flex-col min-h-[650px]">
         <header class="bg-slate-800 text-white p-4 text-center">
-            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA</h1>
-            <p class="text-xs text-slate-400 mt-0.5">Gestión de Inventario y Devoluciones</p>
+            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v4</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Gestión de Alto Volumen y Penalizaciones</p>
         </header>
 
         <nav class="flex border-b border-gray-200 bg-gray-50 text-center">
@@ -64,14 +64,16 @@
             </div>
 
             <div id="tab-paquetes" class="space-y-3 tab-content hidden">
-                <input type="text" id="buscarPaquete" oninput="listarPaquetes()" placeholder="Buscar por guía o cliente..." class="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-slate-500">
+                <input type="text" id="buscarPaquete" oninput="listarPaquetes()" placeholder="🔍 Rápido: Buscar por guía o nombre..." class="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-slate-500">
                 
-                <div class="flex justify-between text-[10px] font-bold text-gray-500 px-1">
-                    <span class="flex items-center gap-1">🔵 Día 1</span>
-                    <span class="flex items-center gap-1">🟡 Día 2 (Firmado)</span>
-                    <span class="flex items-center gap-1">🔴 Día 3 (Devuelto)</span>
+                <div class="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-lg text-[10px] font-bold text-center">
+                    <button onclick="filtrarPorEstado('Todos')" id="btn-f-Todos" class="py-1.5 rounded bg-white shadow-xs text-gray-800">Todos</button>
+                    <button onclick="filtrarPorEstado('Dia 1')" id="btn-f-Dia1" class="py-1.5 rounded text-blue-600">🔵 Día 1</button>
+                    <button onclick="filtrarPorEstado('Dia 2')" id="btn-f-Dia2" class="py-1.5 rounded text-amber-600">🟡 Día 2</button>
+                    <button onclick="filtrarPorEstado('Dia 3')" id="btn-f-Dia3" class="py-1.5 rounded text-red-600">🔴 Día 3</button>
                 </div>
-                <div id="contenedorPaquetes" class="space-y-2 max-h-[380px] overflow-y-auto pr-1"></div>
+
+                <div id="contenedorPaquetes" class="space-y-2 max-h-[350px] overflow-y-auto pr-1"></div>
             </div>
 
             <div id="tab-clientes" class="space-y-3 tab-content hidden">
@@ -131,10 +133,11 @@
     </div>
 
     <script>
-        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v3')) || [];
-        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v3')) || [];
+        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v4')) || [];
+        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v4')) || [];
+        let ESTADO_FILTRO_ACTUAL = "Todos";
 
-        // LIENZO DE FIRMA (ARREGLADO PARA PANTALLAS TÁCTILES)
+        // LIENZO DE FIRMA TÁCTIL
         const canvas = document.getElementById('canvasFirma');
         const ctx = canvas.getContext('2d');
         let dibujando = false;
@@ -147,15 +150,11 @@
             ctx.strokeStyle = "#1e293b";
         }
 
-        // Obtener coordenadas exactas considerando scroll y escala de pantalla
         function obtenerPosicion(e) {
             const rect = canvas.getBoundingClientRect();
             const clienteX = e.touches ? e.touches[0].clientX : e.clientX;
             const clienteY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: clienteX - rect.left,
-                y: clienteY - rect.top
-            };
+            return { x: clienteX - rect.left, y: clienteY - rect.top };
         }
 
         function arrancarDibujo(e) {
@@ -174,24 +173,19 @@
             if (!e.touches) e.preventDefault();
         }
 
-        function detenerDibujo() {
-            dibujando = false;
-        }
+        function detenerDibujo() { dibujando = false; }
 
-        // Eventos de Mouse
         canvas.addEventListener('mousedown', arrancarDibujo);
         canvas.addEventListener('mousemove', moverDibujo);
         canvas.addEventListener('mouseup', detenerDibujo);
         canvas.addEventListener('mouseleave', detenerDibujo);
-
-        // Eventos Touch Móvil Corregidos
         canvas.addEventListener('touchstart', arrancarDibujo, { passive: false });
         canvas.addEventListener('touchmove', moverDibujo, { passive: false });
         canvas.addEventListener('touchend', detenerDibujo);
 
         function limpiarFirma() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.innerHTML = "";
+            ctx.beginPath();
         }
 
         // CONTROL DE PESTAÑAS
@@ -216,6 +210,21 @@
             }
         }
 
+        // CONTROL DE FILTROS EN LA PESTAÑA DE PAQUETES
+        function filtrarPorEstado(nuevoEstado) {
+            ESTADO_FILTRO_ACTUAL = nuevoEstado;
+            // Estilos de botones de filtro
+            ['Todos', 'Dia 1', 'Dia 2', 'Dia 3'].forEach(est => {
+                const btn = document.getElementById(`btn-f-${est}`);
+                if (est === nuevoEstado) {
+                    btn.className = "py-1.5 rounded bg-white shadow-xs font-extrabold text-slate-900";
+                } else {
+                    btn.className = `py-1.5 rounded text-gray-500 ${est==='Dia 1'?'text-blue-500':est==='Dia 2'?'text-amber-500':est==='Dia 3'?'text-red-500':''}`;
+                }
+            });
+            listarPaquetes();
+        }
+
         // REGISTRAR PAQUETE (DÍA 1)
         function registrarDia1(event) {
             event.preventDefault();
@@ -224,7 +233,6 @@
             const telefono = document.getElementById('inputTelefono').value.trim();
             const nombre = document.getElementById('inputNombre').value.trim();
 
-            // Validar si el cliente tiene historial de castigo
             const clienteExistente = DB_CLIENTES.find(c => c.telefono === telefono || c.nombre.toLowerCase() === nombre.toLowerCase());
             if (clienteExistente && clienteExistente.incidencias > 0) {
                 document.getElementById('alertaNombre').textContent = nombre;
@@ -234,7 +242,7 @@
 
             if (!clienteExistente) {
                 DB_CLIENTES.push({ id: Date.now(), nombre: nombre, telefono: telefono, incidencias: 0 });
-                localStorage.setItem('db_clientes_v3', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v4', JSON.stringify(DB_CLIENTES));
             }
 
             DB_PAQUETES.push({
@@ -247,21 +255,26 @@
                 firma: null
             });
 
-            localStorage.setItem('db_paquetes_v3', JSON.stringify(DB_PAQUETES));
-            alert("✅ Paquete ingresado con éxito en Día 1 (Azul).");
+            localStorage.setItem('db_paquetes_v4', JSON.stringify(DB_PAQUETES));
+            alert("✅ Paquete ingresado con éxito en Día 1.");
             document.getElementById('formRegistro').reset();
         }
 
-        // MOSTRAR PAQUETES CON SEMÁFORO
+        // LISTAR PAQUETES CON COMPRESIÓN DE ALTO VOLUMEN
         function listarPaquetes() {
             const filtro = document.getElementById('buscarPaquete').value.toLowerCase().trim();
             const contenedor = document.getElementById('contenedorPaquetes');
             contenedor.innerHTML = '';
 
-            const filtrados = DB_PAQUETES.filter(p => p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro));
+            // Filtrar primero por texto, luego por pestaña de estado
+            let filtrados = DB_PAQUETES.filter(p => p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro));
+            
+            if (ESTADO_FILTRO_ACTUAL !== "Todos") {
+                filtrados = filtrados.filter(p => p.estado === ESTADO_FILTRO_ACTUAL);
+            }
 
             if (filtrados.length === 0) {
-                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay paquetes en base.</p>`;
+                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay paquetes bajo este filtro.</p>`;
                 return;
             }
 
@@ -337,7 +350,6 @@
             paquete.estado = nuevoEstado;
 
             if (nuevoEstado === "Dia 2") {
-                // Verificar si dibujó algo en el canvas
                 const copiaCanvas = document.createElement('canvas');
                 copiaCanvas.width = canvas.width;
                 copiaCanvas.height = canvas.height;
@@ -346,19 +358,18 @@
                 }
             }
 
-            // Si se vence y pasa a Día 3, se le suma automáticamente la incidencia al cliente
             if (nuevoEstado === "Dia 3") {
                 const cliente = DB_CLIENTES.find(c => c.telefono === paquete.telefono || c.nombre.toLowerCase() === paquete.nombre.toLowerCase());
                 if (cliente) {
                     cliente.incidencias += 1;
-                    localStorage.setItem('db_clientes_v3', JSON.stringify(DB_CLIENTES));
+                    localStorage.setItem('db_clientes_v4', JSON.stringify(DB_CLIENTES));
                 }
             }
 
-            localStorage.setItem('db_paquetes_v3', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v4', JSON.stringify(DB_PAQUETES));
             cerrarModalEditar();
             listarPaquetes();
-            alert("🔄 Paquete actualizado correctamente.");
+            alert("🔄 Paquete actualizado.");
         }
 
         function cerrarModalEditar() {
@@ -366,7 +377,7 @@
             limpiarFirma();
         }
 
-        // PESTAÑA 3: LISTADO DE PERSONAS
+        // PESTAÑA 3: LISTADO DE PERSONAS CON FUNCIÓN DE LIMPIEZA / PERDÓN
         function listarClientes() {
             const filtro = document.getElementById('buscarCliente').value.toLowerCase().trim();
             const contenedor = document.getElementById('contenedorClientes');
@@ -375,12 +386,19 @@
             const filtrados = DB_CLIENTES.filter(c => c.nombre.toLowerCase().includes(filtro) || c.telefono.includes(filtro));
 
             filtrados.forEach(c => {
-                let marcaClase = "bg-green-100 text-green-800";
+                let colorMarca = "bg-green-100 text-green-800";
                 let textoMarca = "🟢 Limpio";
+                let botonLimpiar = "";
 
+                // Si tiene incidencias, se le añade el botón para "Perdonar / Limpiar"
                 if (c.incidencias > 0) {
-                    marcaClase = "bg-red-100 text-red-800 font-bold";
+                    colorMarca = "bg-red-100 text-red-800 font-bold";
                     textoMarca = `⚠️ REINCIDENTE (${c.incidencias})`;
+                    botonLimpiar = `
+                        <button onclick="limpiarPenalizacion(${c.id})" class="ml-2 bg-green-600 text-white font-bold px-2 py-1 rounded text-[10px] hover:bg-green-700 transition">
+                            🟢 Perdonar
+                        </button>
+                    `;
                 }
 
                 const div = document.createElement('div');
@@ -390,10 +408,25 @@
                         <div class="font-bold text-gray-800 capitalize">${c.nombre}</div>
                         <div class="text-gray-500 font-mono">📱 Cel: ${c.telefono}</div>
                     </div>
-                    <span class="px-2 py-1 rounded text-[10px] ${marcaClase}">${textoMarca}</span>
+                    <div class="flex items-center">
+                        <span class="px-2 py-1 rounded text-[10px] ${colorMarca}">${textoMarca}</span>
+                        ${botonLimpiar}
+                    </div>
                 `;
                 contenedor.appendChild(div);
             });
+        }
+
+        // FUNCIÓN NUEVA: LIMPIAR HISTORIAL DEL CLIENTE
+        function limpiarPenalizacion(idCliente) {
+            const index = DB_CLIENTES.findIndex(c => c.id === idCliente);
+            if (index === -1) return;
+
+            if (confirm(`¿Estás seguro de limpiar el historial de ${DB_CLIENTES[index].nombre}? Volverá a estar libre de incidencias.`)) {
+                DB_CLIENTES[index].incidencias = 0;
+                localStorage.setItem('db_clientes_v4', JSON.stringify(DB_CLIENTES));
+                listarClientes();
+            }
         }
 
         // CONTROL DEL ESCÁNER CÁMARA
@@ -422,7 +455,6 @@
             }
         }
 
-        // Corregido el bug de la función detenerEscaner
         function detenerEscaner() {
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
