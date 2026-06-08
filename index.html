@@ -7,118 +7,155 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        /* Estilos para el lienzo de firma */
         #canvasFirma {
             border: 2px dashed #cbd5e1;
             background-color: #f8fafc;
-            touch-action: none; /* Evita el scroll de la pantalla al firmar */
+            touch-action: none; /* Evita scroll al firmar con el dedo */
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4">
 
-    <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-4 flex flex-col">
+    <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-4 flex flex-col min-h-[600px]">
         <header class="bg-green-600 text-white p-5 text-center">
             <h1 class="text-xl font-bold tracking-wide">CONTROL DE DEVOLUCIONES</h1>
-            <p class="text-xs text-green-100 mt-1">Registro de Paquetes y Reincidencias</p>
+            <p class="text-xs text-green-100 mt-1">Sistema de Gestión Local</p>
         </header>
 
-        <div class="p-5 flex-1 space-y-6">
+        <nav class="flex border-b border-gray-200 bg-gray-50">
+            <button onclick="cambiarPestaña('pestaña-registro')" id="btn-tab-registro" 
+                    class="w-1/2 py-3 text-sm font-bold text-green-600 border-b-2 border-green-600 transition focus:outline-none">
+                📝 Registrar Devolución
+            </button>
+            <button onclick="cambiarPestaña('pestaña-clientes')" id="btn-tab-clientes" 
+                    class="w-1/2 py-3 text-sm font-bold text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition focus:outline-none">
+                👥 Clientes / Historial
+            </button>
+        </nav>
+
+        <div class="p-5 flex-1 flex flex-col justify-between">
             
-            <section class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <h2 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    📷 Escanear Etiqueta de Paquete
-                </h2>
-                <button type="button" onclick="alternarEscaner()" id="btnEscanner" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm flex justify-center items-center gap-2">
-                    <span>Activar Cámara / Escáner</span>
-                </button>
-                <div id="lector-qr" class="mt-3 rounded-lg overflow-hidden hidden"></div>
-            </section>
-
-            <form id="formDevolucion" onsubmit="procesarRegistro(event)" class="space-y-4">
+            <div id="pestaña-registro" class="space-y-5 tab-content">
                 
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Número de Guía</label>
-                    <input type="text" id="inputGuia" required placeholder="Ej: JMX101712932167" 
-                           class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none uppercase font-mono tracking-wider">
-                </div>
+                <section class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <h2 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        📷 Escanear Código de Guía
+                    </h2>
+                    <button type="button" onclick="alternarEscaner()" id="btnEscanner" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm flex justify-center items-center gap-2">
+                        <span>Activar Cámara / Escáner</span>
+                    </button>
+                    <div id="lector-qr" class="mt-3 rounded-lg overflow-hidden hidden"></div>
+                </section>
 
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Número de Teléfono</label>
-                    <input type="tel" id="inputTelefono" inputmode="numeric" pattern="[0-9]*" required placeholder="Ej: 6674863524" 
-                           class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none font-mono">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nombre Completo del Cliente</label>
-                    <input type="text" id="inputNombre" required placeholder="Ej: Fernanda Flores" 
-                           class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none capitalize">
-                </div>
-
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <label class="block text-xs font-bold text-gray-600 uppercase">Firma Digital (Día 2 - Solicitud)</label>
-                        <button type="button" onclick="limpiarFirma()" class="text-xs text-red-600 hover:underline font-medium">Borrar Firma</button>
+                <form id="formDevolucion" onsubmit="procesarRegistro(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Número de Guía</label>
+                        <input type="text" id="inputGuia" required placeholder="Ej: JMX101712932167" 
+                               class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none uppercase font-mono tracking-wider">
                     </div>
-                    <canvas id="canvasFirma" class="w-full h-32 rounded-lg"></canvas>
-                </div>
 
-                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mt-4">
-                    Registrar Movimiento / Firma
-                </button>
-            </form>
-
-            <section class="border-t border-gray-200 pt-6">
-                <h2 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">🔍 Buscador de Historial</h2>
-                <input type="text" id="inputBuscar" oninput="buscarRegistros()" placeholder="Buscar por Nombre, Teléfono o Guía..." 
-                       class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                
-                <div id="listaResultados" class="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Número de Teléfono</label>
+                        <input type="tel" id="inputTelefono" inputmode="numeric" pattern="[0-9]*" required placeholder="Ej: 6674863524" 
+                               class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none font-mono">
                     </div>
-            </section>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nombre del Cliente</label>
+                        <input type="text" id="inputNombre" required placeholder="Ej: Fernanda Flores" 
+                               class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none capitalize">
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-bold text-gray-600 uppercase">Firma Digital (Día 2)</label>
+                            <button type="button" onclick="limpiarFirma()" class="text-xs text-red-600 hover:underline font-medium">Borrar</button>
+                        </div>
+                        <canvas id="canvasFirma" class="w-full h-28 rounded-lg"></canvas>
+                    </div>
+
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md">
+                        Guardar Registro Actual
+                    </button>
+                </form>
+            </div>
+
+            <div id="pestaña-clientes" class="space-y-4 tab-content hidden">
+                <section>
+                    <h2 class="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">🔍 Buscar en el Historial</h2>
+                    <input type="text" id="inputBuscar" oninput="buscarRegistros()" placeholder="Buscar por Nombre, Teléfono o Guía..." 
+                           class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    
+                    <div id="listaResultados" class="mt-4 space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                        </div>
+                </section>
+            </div>
+
         </div>
     </main>
 
     <div id="modalAlerta" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl border-4 border-red-500 animate-bounce-short">
-            <div class="text-red-500 text-5xl mb-3">⚠️</div>
-            <h3 class="text-xl font-extrabold text-red-600 uppercase tracking-tight">¡ALERTA DE REINCIDENCIA!</h3>
-            <p class="text-gray-700 mt-2 text-sm leading-relaxed">
-                Este cliente (<span id="alertaNombre" class="font-bold"></span>) ya cuenta con una devolución o rescate previo en el sistema.
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl border-4 border-red-500">
+            <div class="text-red-500 text-5xl mb-2">⚠️</div>
+            <h3 class="text-xl font-extrabold text-red-600 uppercase tracking-tight">¡REINCIDENTE DETECTADO!</h3>
+            <p class="text-gray-700 mt-2 text-sm">
+                El cliente <span id="alertaNombre" class="font-bold text-black text-base"></span> ya tiene registros previos de paquetes rescatados/devueltos.
             </p>
-            <div class="bg-red-50 p-3 rounded-lg my-3 text-xs text-red-800 font-mono font-bold">
-                PROHIBIDO SEGUNDO INTENTO.<br>DEVOLVER PAQUETE A ORIGEN DE INMEDIATO.
+            <div class="bg-red-50 p-3 rounded-lg my-4 text-xs text-red-800 font-mono font-bold">
+                REGLA DE CONTROL:<br>NO SE PERMITE SEGUNDA OPORTUNIDAD.<br>REGRESAR PAQUETE A ORIGEN.
             </div>
             <button onclick="cerrarAlerta()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl transition">
-                Entendido / Bloquear Proceso
+                Entendido / Bloquear Registro
             </button>
         </div>
     </div>
 
     <script>
-        // Simulador de Base de Datos en LocalStorage para no perder datos al recargar
+        // Simulación de Base de Datos Local
         let DB_REGISTROS = JSON.parse(localStorage.getItem('db_devoluciones')) || [];
 
-        // Inicialización del Lienzo de Firma
+        // SISTEMA DE CONTROL DE PESTAÑAS (TABS)
+        function cambiarPestaña(idPestaña) {
+            // Ocultar todos los contenidos de pestañas
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Mostrar la pestaña seleccionada
+            document.getElementById(idPestaña).classList.remove('hidden');
+
+            // Resetear estilos de los botones del menú
+            const tabReg = document.getElementById('btn-tab-registro');
+            const tabCli = document.getElementById('btn-tab-clientes');
+
+            if (idPestaña === 'pestaña-registro') {
+                tabReg.className = "w-1/2 py-3 text-sm font-bold text-green-600 border-b-2 border-green-600 transition focus:outline-none";
+                tabCli.className = "w-1/2 py-3 text-sm font-bold text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition focus:outline-none";
+                // Forzar reajuste del lienzo de firma por si cambió el tamaño al estar oculto
+                ajustarCanvas();
+            } else {
+                tabCli.className = "w-1/2 py-3 text-sm font-bold text-green-600 border-b-2 border-green-600 transition focus:outline-none";
+                tabReg.className = "w-1/2 py-3 text-sm font-bold text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition focus:outline-none";
+                buscarRegistros(); // Actualizar la lista en tiempo real
+            }
+        }
+
+        // CONTROL DEL LIENZO DE FIRMA
         const canvas = document.getElementById('canvasFirma');
         const ctx = canvas.getContext('2d');
         let dibujando = false;
 
-        // Ajustar resolución interna del canvas
         function ajustarCanvas() {
             canvas.width = canvas.offsetWidth;
             canvas.height = canvas.offsetHeight;
             ctx.lineWidth = 3;
             ctx.lineCap = "round";
-            ctx.strokeStyle = "#0f172a"; // Color pizarra oscuro
+            ctx.strokeStyle = "#1e293b";
         }
         window.addEventListener('resize', ajustarCanvas);
         window.addEventListener('load', () => {
             ajustarCanvas();
-            buscarRegistros(); // Cargar la lista inicial si existen datos
+            buscarRegistros();
         });
 
-        // Eventos de firma para pantallas táctiles (Móvil) y Mouse (PC)
+        // Eventos para firmar con mouse o touch celular
         canvas.addEventListener('mousedown', (e) => { dibujando = true; dibujar(e); });
         canvas.addEventListener('mousemove', dibujar);
         canvas.addEventListener('mouseup', () => dibujando = false);
@@ -131,7 +168,6 @@
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX || e.pageX) - rect.left;
             const y = (e.clientY || e.pageY) - rect.top;
-            
             ctx.lineTo(x, y);
             ctx.stroke();
             ctx.beginPath();
@@ -156,15 +192,14 @@
 
                 html5QrcodeScanner = new Html5Qrcode("lector-qr");
                 html5QrcodeScanner.start(
-                    { facingMode: "environment" }, // Forzar cámara trasera
+                    { facingMode: "environment" },
                     { fps: 10, qrbox: { width: 250, height: 150 } },
                     (decodedText) => {
-                        // Al detectar código, rellenamos el input de la guía
                         document.getElementById('inputGuia').value = decodedText.toUpperCase();
                         detenerEscaner();
                     },
-                    (errorMessage) => { /* Ignorar errores de enfoque continuo */ }
-                ).catch(err => alert("Error al acceder a la cámara: " + err));
+                    (errorMessage) => {}
+                ).catch(err => alert("Error de cámara: " + err));
             } else {
                 detenerEscaner();
             }
@@ -173,39 +208,36 @@
         function detenerEscaner() {
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
-                    document.getElementById('lector-qr').classAdd('hidden');
+                    document.getElementById('lector-qr').classList.add('hidden');
                     const btn = document.getElementById('btnEscanner');
                     btn.textContent = "Activar Cámara / Escáner";
                     btn.classList.replace('bg-gray-600', 'bg-blue-600');
-                    document.getElementById('lector-qr').classList.add('hidden');
                 });
             }
         }
 
-        // VALIDACIÓN DE REINCIDENCIA Y PROCESAMIENTO
+        // PROCESAMIENTO Y VALIDACIÓN DE REINCIDENCIA
         function procesarRegistro(event) {
             event.preventDefault();
 
             const guia = document.getElementById('inputGuia').value.trim().toUpperCase();
             const telefono = document.getElementById('inputTelefono').value.trim();
             const nombre = document.getElementById('inputNombre').value.trim();
-            
-            // Validar si el lienzo tiene firma (si no está completamente vacío)
             const firmaVacia = canvas.toDataURL() === document.createElement('canvas').toDataURL();
 
-            // REGLA DE ORO: Validar si el cliente ya existe en el historial previo
+            // Buscar si el cliente ya existe en la base de datos (por Nombre o por Teléfono)
             const clienteReincidente = DB_REGISTROS.find(reg => 
                 reg.telefono === telefono || reg.nombre.toLowerCase() === nombre.toLowerCase()
             );
 
             if (clienteReincidente) {
-                // Lanzar la alerta roja restrictiva de inmediato
+                // Si ya existe en el historial anterior, se dispara el cuadro de Alerta Crítica
                 document.getElementById('alertaNombre').textContent = nombre;
                 document.getElementById('modalAlerta').classList.remove('hidden');
-                return; // Bloquea completamente que se guarde el registro
+                return; // Bloquea por completo que se guarde el dato
             }
 
-            // Si está limpio, creamos el nuevo registro estructurado
+            // Si está limpio, se guarda en el arreglo
             const nuevoRegistro = {
                 id: Date.now(),
                 guia: guia,
@@ -218,11 +250,9 @@
             DB_REGISTROS.push(nuevoRegistro);
             localStorage.setItem('db_devoluciones', JSON.stringify(DB_REGISTROS));
 
-            // Limpieza del flujo
-            alert("✅ Registro guardado exitosamente (Día 2 Procesado).");
+            alert("✅ Paquete y firma registrados correctamente en el almacén.");
             document.getElementById('formDevolucion').reset();
             limpiarFirma();
-            buscarRegistros();
         }
 
         function cerrarAlerta() {
@@ -231,13 +261,12 @@
             limpiarFirma();
         }
 
-        // BUSCADOR FLEXIBLE EN TIEMPO REAL
+        // BUSCADOR EN LA PESTAÑA DE CLIENTES
         function buscarRegistros() {
             const termino = document.getElementById('inputBuscar').value.toLowerCase().trim();
             const lista = document.getElementById('listaResultados');
             lista.innerHTML = '';
 
-            // Filtrar por cualquiera de los tres parámetros requeridos
             const filtrados = DB_REGISTROS.filter(reg => 
                 reg.nombre.toLowerCase().includes(termino) ||
                 reg.telefono.includes(termino) ||
@@ -245,23 +274,24 @@
             );
 
             if (filtrados.length === 0) {
-                lista.innerHTML = `<p class="text-xs text-center text-gray-400 py-2">No se encontraron registros coincidentes.</p>`;
+                lista.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay registros almacenados con esos datos.</p>`;
                 return;
             }
 
+            // Mostrar los últimos registrados arriba
             filtrados.reverse().forEach(reg => {
                 const item = document.createElement('div');
-                item.className = "bg-gray-50 border border-gray-200 p-3 rounded-lg text-xs flex flex-col gap-1 shadow-xs";
+                item.className = "bg-gray-50 border border-gray-200 p-3 rounded-xl text-xs flex flex-col gap-1 shadow-sm";
                 item.innerHTML = `
-                    <div class="flex justify-between font-bold text-gray-700">
+                    <div class="flex justify-between font-bold text-gray-800">
                         <span class="capitalize">👤 ${reg.nombre}</span>
                         <span class="text-blue-600 font-mono">📱 ${reg.telefono}</span>
                     </div>
-                    <div class="text-gray-500 font-mono flex justify-between">
+                    <div class="text-gray-500 font-mono flex justify-between mt-0.5">
                         <span>📦 Guía: ${reg.guia}</span>
-                        <span class="text-[10px]">${reg.fecha}</span>
+                        <span class="text-[10px] text-gray-400">${reg.fecha.split(',')[0]}</span>
                     </div>
-                    ${reg.firma ? `<div class="mt-1 pt-1 border-t border-gray-200 text-right"><span class="text-[10px] bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded-sm">✓ Con Firma Digital</span></div>` : ''}
+                    ${reg.firma ? `<div class="mt-1.5 pt-1 border-t border-gray-100 flex justify-end"><span class="text-[9px] bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded">✓ Firmado en Aplicación</span></div>` : ''}
                 `;
                 lista.appendChild(item);
             });
