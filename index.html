@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Devoluciones - Sistema Última Milla</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* Estilos para el lienzo de firma */
+        #canvasFirma {
+            border: 2px dashed #cbd5e1;
+            background-color: #f8fafc;
+            touch-action: none; /* Evita el scroll de la pantalla al firmar */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4">
+
+    <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-4 flex flex-col">
+        <header class="bg-green-600 text-white p-5 text-center">
+            <h1 class="text-xl font-bold tracking-wide">CONTROL DE DEVOLUCIONES</h1>
+            <p class="text-xs text-green-100 mt-1">Registro de Paquetes y Reincidencias</p>
+        </header>
+
+        <div class="p-5 flex-1 space-y-6">
+            
+            <section class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h2 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    📷 Escanear Etiqueta de Paquete
+                </h2>
+                <button type="button" onclick="alternarEscaner()" id="btnEscanner" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition shadow-sm flex justify-center items-center gap-2">
+                    <span>Activar Cámara / Escáner</span>
+                </button>
+                <div id="lector-qr" class="mt-3 rounded-lg overflow-hidden hidden"></div>
+            </section>
+
+            <form id="formDevolucion" onsubmit="procesarRegistro(event)" class="space-y-4">
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Número de Guía</label>
+                    <input type="text" id="inputGuia" required placeholder="Ej: JMX101712932167" 
+                           class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none uppercase font-mono tracking-wider">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Número de Teléfono</label>
+                    <input type="tel" id="inputTelefono" inputmode="numeric" pattern="[0-9]*" required placeholder="Ej: 6674863524" 
+                           class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none font-mono">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Nombre Completo del Cliente</label>
+                    <input type="text" id="inputNombre" required placeholder="Ej: Fernanda Flores" 
+                           class="w-full border border-gray-300 rounded-lg p-3 text-gray-800 focus:ring-2 focus:ring-green-500 focus:outline-none capitalize">
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-xs font-bold text-gray-600 uppercase">Firma Digital (Día 2 - Solicitud)</label>
+                        <button type="button" onclick="limpiarFirma()" class="text-xs text-red-600 hover:underline font-medium">Borrar Firma</button>
+                    </div>
+                    <canvas id="canvasFirma" class="w-full h-32 rounded-lg"></canvas>
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-md mt-4">
+                    Registrar Movimiento / Firma
+                </button>
+            </form>
+
+            <section class="border-t border-gray-200 pt-6">
+                <h2 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">🔍 Buscador de Historial</h2>
+                <input type="text" id="inputBuscar" oninput="buscarRegistros()" placeholder="Buscar por Nombre, Teléfono o Guía..." 
+                       class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                
+                <div id="listaResultados" class="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                    </div>
+            </section>
+        </div>
+    </main>
+
+    <div id="modalAlerta" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-2xl w-full max-w-sm p-6 text-center shadow-2xl border-4 border-red-500 animate-bounce-short">
+            <div class="text-red-500 text-5xl mb-3">⚠️</div>
+            <h3 class="text-xl font-extrabold text-red-600 uppercase tracking-tight">¡ALERTA DE REINCIDENCIA!</h3>
+            <p class="text-gray-700 mt-2 text-sm leading-relaxed">
+                Este cliente (<span id="alertaNombre" class="font-bold"></span>) ya cuenta con una devolución o rescate previo en el sistema.
+            </p>
+            <div class="bg-red-50 p-3 rounded-lg my-3 text-xs text-red-800 font-mono font-bold">
+                PROHIBIDO SEGUNDO INTENTO.<br>DEVOLVER PAQUETE A ORIGEN DE INMEDIATO.
+            </div>
+            <button onclick="cerrarAlerta()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 px-4 rounded-xl transition">
+                Entendido / Bloquear Proceso
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Simulador de Base de Datos en LocalStorage para no perder datos al recargar
+        let DB_REGISTROS = JSON.parse(localStorage.getItem('db_devoluciones')) || [];
+
+        // Inicialización del Lienzo de Firma
+        const canvas = document.getElementById('canvasFirma');
+        const ctx = canvas.getContext('2d');
+        let dibujando = false;
+
+        // Ajustar resolución interna del canvas
+        function ajustarCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.lineWidth = 3;
+            ctx.lineCap = "round";
+            ctx.strokeStyle = "#0f172a"; // Color pizarra oscuro
+        }
+        window.addEventListener('resize', ajustarCanvas);
+        window.addEventListener('load', () => {
+            ajustarCanvas();
+            buscarRegistros(); // Cargar la lista inicial si existen datos
+        });
+
+        // Eventos de firma para pantallas táctiles (Móvil) y Mouse (PC)
+        canvas.addEventListener('mousedown', (e) => { dibujando = true; dibujar(e); });
+        canvas.addEventListener('mousemove', dibujar);
+        canvas.addEventListener('mouseup', () => dibujando = false);
+        canvas.addEventListener('touchstart', (e) => { dibujando = true; dibujar(e.touches[0]); });
+        canvas.addEventListener('touchmove', (e) => { dibujar(e.touches[0]); e.preventDefault(); });
+        canvas.addEventListener('touchend', () => dibujando = false);
+
+        function dibujar(e) {
+            if (!dibujando) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.pageX) - rect.left;
+            const y = (e.clientY || e.pageY) - rect.top;
+            
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function limpiarFirma() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+        }
+
+        // CONTROL DEL ESCÁNER DE CÁMARA
+        let html5QrcodeScanner;
+        function alternarEscaner() {
+            const lectorDiv = document.getElementById('lector-qr');
+            const btn = document.getElementById('btnEscanner');
+
+            if (lectorDiv.classList.contains('hidden')) {
+                lectorDiv.classList.remove('hidden');
+                btn.textContent = "Apagar Cámara";
+                btn.classList.replace('bg-blue-600', 'bg-gray-600');
+
+                html5QrcodeScanner = new Html5Qrcode("lector-qr");
+                html5QrcodeScanner.start(
+                    { facingMode: "environment" }, // Forzar cámara trasera
+                    { fps: 10, qrbox: { width: 250, height: 150 } },
+                    (decodedText) => {
+                        // Al detectar código, rellenamos el input de la guía
+                        document.getElementById('inputGuia').value = decodedText.toUpperCase();
+                        detenerEscaner();
+                    },
+                    (errorMessage) => { /* Ignorar errores de enfoque continuo */ }
+                ).catch(err => alert("Error al acceder a la cámara: " + err));
+            } else {
+                detenerEscaner();
+            }
+        }
+
+        function detenerEscaner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('lector-qr').classAdd('hidden');
+                    const btn = document.getElementById('btnEscanner');
+                    btn.textContent = "Activar Cámara / Escáner";
+                    btn.classList.replace('bg-gray-600', 'bg-blue-600');
+                    document.getElementById('lector-qr').classList.add('hidden');
+                });
+            }
+        }
+
+        // VALIDACIÓN DE REINCIDENCIA Y PROCESAMIENTO
+        function procesarRegistro(event) {
+            event.preventDefault();
+
+            const guia = document.getElementById('inputGuia').value.trim().toUpperCase();
+            const telefono = document.getElementById('inputTelefono').value.trim();
+            const nombre = document.getElementById('inputNombre').value.trim();
+            
+            // Validar si el lienzo tiene firma (si no está completamente vacío)
+            const firmaVacia = canvas.toDataURL() === document.createElement('canvas').toDataURL();
+
+            // REGLA DE ORO: Validar si el cliente ya existe en el historial previo
+            const clienteReincidente = DB_REGISTROS.find(reg => 
+                reg.telefono === telefono || reg.nombre.toLowerCase() === nombre.toLowerCase()
+            );
+
+            if (clienteReincidente) {
+                // Lanzar la alerta roja restrictiva de inmediato
+                document.getElementById('alertaNombre').textContent = nombre;
+                document.getElementById('modalAlerta').classList.remove('hidden');
+                return; // Bloquea completamente que se guarde el registro
+            }
+
+            // Si está limpio, creamos el nuevo registro estructurado
+            const nuevoRegistro = {
+                id: Date.now(),
+                guia: guia,
+                telefono: telefono,
+                nombre: nombre,
+                fecha: new Date().toLocaleString(),
+                firma: firmaVacia ? null : canvas.toDataURL()
+            };
+
+            DB_REGISTROS.push(nuevoRegistro);
+            localStorage.setItem('db_devoluciones', JSON.stringify(DB_REGISTROS));
+
+            // Limpieza del flujo
+            alert("✅ Registro guardado exitosamente (Día 2 Procesado).");
+            document.getElementById('formDevolucion').reset();
+            limpiarFirma();
+            buscarRegistros();
+        }
+
+        function cerrarAlerta() {
+            document.getElementById('modalAlerta').classList.add('hidden');
+            document.getElementById('formDevolucion').reset();
+            limpiarFirma();
+        }
+
+        // BUSCADOR FLEXIBLE EN TIEMPO REAL
+        function buscarRegistros() {
+            const termino = document.getElementById('inputBuscar').value.toLowerCase().trim();
+            const lista = document.getElementById('listaResultados');
+            lista.innerHTML = '';
+
+            // Filtrar por cualquiera de los tres parámetros requeridos
+            const filtrados = DB_REGISTROS.filter(reg => 
+                reg.nombre.toLowerCase().includes(termino) ||
+                reg.telefono.includes(termino) ||
+                reg.guia.toLowerCase().includes(termino)
+            );
+
+            if (filtrados.length === 0) {
+                lista.innerHTML = `<p class="text-xs text-center text-gray-400 py-2">No se encontraron registros coincidentes.</p>`;
+                return;
+            }
+
+            filtrados.reverse().forEach(reg => {
+                const item = document.createElement('div');
+                item.className = "bg-gray-50 border border-gray-200 p-3 rounded-lg text-xs flex flex-col gap-1 shadow-xs";
+                item.innerHTML = `
+                    <div class="flex justify-between font-bold text-gray-700">
+                        <span class="capitalize">👤 ${reg.nombre}</span>
+                        <span class="text-blue-600 font-mono">📱 ${reg.telefono}</span>
+                    </div>
+                    <div class="text-gray-500 font-mono flex justify-between">
+                        <span>📦 Guía: ${reg.guia}</span>
+                        <span class="text-[10px]">${reg.fecha}</span>
+                    </div>
+                    ${reg.firma ? `<div class="mt-1 pt-1 border-t border-gray-200 text-right"><span class="text-[10px] bg-green-100 text-green-800 font-bold px-1.5 py-0.5 rounded-sm">✓ Con Firma Digital</span></div>` : ''}
+                `;
+                lista.appendChild(item);
+            });
+        }
+    </script>
+</body>
+</html>
