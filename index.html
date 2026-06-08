@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Control Última Milla v6</title>
+    <title>Sistema de Control Última Milla v7</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -16,10 +16,10 @@
 </head>
 <body class="bg-gray-100 font-sans min-h-screen flex flex-col items-center p-4">
 
-    <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-2 flex flex-col min-h-[660px]">
+    <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-2 flex flex-col min-h-[650px]">
         <header class="bg-slate-800 text-white p-4 text-center">
-            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v6</h1>
-            <p class="text-xs text-slate-400 mt-0.5">Cortes de Archivo y Evidencias de Firma</p>
+            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v7</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Validación Única por Celular y Homónimos</p>
         </header>
 
         <nav class="flex border-b border-gray-200 bg-gray-50 text-center">
@@ -50,7 +50,7 @@
                         <input type="text" id="inputGuia" required placeholder="Ej: JMX101712932" class="w-full border border-gray-300 rounded-lg p-2.5 uppercase font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Número de Teléfono</label>
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Número de Teléfono (Único)</label>
                         <input type="tel" id="inputTelefono" inputmode="numeric" pattern="[0-9]*" required placeholder="Ej: 6674863524" class="w-full border border-gray-300 rounded-lg p-2.5 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
                     <div>
@@ -96,9 +96,7 @@
                 <h3 class="font-bold text-gray-800 text-sm">Actualizar Paquete: <span id="modalGuiaTitulo" class="font-mono text-blue-600"></span></h3>
                 <button onclick="cerrarModalEditar()" class="text-gray-400 text-lg font-bold hover:text-gray-600">×</button>
             </div>
-            
             <input type="hidden" id="modalIdPaquete">
-            
             <div>
                 <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Cambiar Estado del Proceso</label>
                 <select id="modalEstado" onchange="evaluarLienzoFirma()" class="w-full border border-gray-300 rounded-lg p-2 text-xs bg-white focus:outline-none">
@@ -108,7 +106,6 @@
                     <option value="Entregado">🟢 Entregado con Éxito al Cliente</option>
                 </select>
             </div>
-
             <div id="seccionFirmaModal" class="space-y-1 hidden">
                 <div class="flex justify-between items-center">
                     <label id="etiquetaFirma" class="block text-[11px] font-bold text-gray-500 uppercase">Firma Obligatoria</label>
@@ -116,10 +113,7 @@
                 </div>
                 <canvas id="canvasFirma" class="w-full h-32 rounded-lg"></canvas>
             </div>
-
-            <button onclick="guardarCambiosPaquete()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">
-                💾 Aplicar Cambios / Procesar
-            </button>
+            <button onclick="guardarCambiosPaquete()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">💾 Aplicar Cambios / Procesar</button>
         </div>
     </div>
 
@@ -137,12 +131,9 @@
                 <p><strong>Registro Inicial:</strong> <span id="eviFecha"></span></p>
             </div>
             <div id="contenedorFirmaImagen" class="border rounded-lg p-2 bg-gray-50 flex flex-col items-center">
-                <p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Firma Digital Capturada:</p>
-                <img id="imgFirmaEvidencia" class="max-h-28 object-contain border bg-white rounded" alt="Sin firma registrada">
+                <img id="imgFirmaEvidencia" class="max-h-28 object-contain border bg-white rounded" alt="Sin firma">
             </div>
-            <button onclick="cerrarModalEvidencia()" class="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs transition">
-                Cerrar Ventana
-            </button>
+            <button onclick="cerrarModalEvidencia()" class="w-full bg-slate-700 text-white font-bold py-2 rounded-lg text-xs">Cerrar</button>
         </div>
     </div>
 
@@ -155,15 +146,13 @@
             <input type="hidden" id="editClientId">
             <div>
                 <label class="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Nombre Completo</label>
-                <input type="text" id="editClientNombre" class="w-full border border-gray-300 rounded-lg p-2 text-xs capitalize focus:outline-none focus:ring-1 focus:ring-slate-500">
+                <input type="text" id="editClientNombre" class="w-full border border-gray-300 rounded-lg p-2 text-xs capitalize focus:outline-none">
             </div>
             <div>
                 <label class="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Número de Teléfono</label>
-                <input type="tel" id="editClientTelefono" inputmode="numeric" pattern="[0-9]*" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-slate-500">
+                <input type="tel" id="editClientTelefono" inputmode="numeric" pattern="[0-9]*" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-mono focus:outline-none">
             </div>
-            <button onclick="guardarCambiosCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">
-                💾 Guardar Corrección
-            </button>
+            <button onclick="guardarCambiosCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">💾 Guardar Corrección</button>
         </div>
     </div>
 
@@ -171,15 +160,15 @@
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 text-center shadow-2xl border-4 border-red-500">
             <div class="text-red-500 text-4xl mb-1">⚠️</div>
             <h3 class="text-lg font-extrabold text-red-600 uppercase tracking-tight">¡REINCIDENTE DETECTADO!</h3>
-            <p class="text-gray-700 mt-1 text-xs">El cliente <span id="alertaNombre" class="font-bold text-black text-sm"></span> ya cuenta con incidencias previas.</p>
+            <p class="text-gray-700 mt-1 text-xs">El celular ingresado le pertenece a <span id="alertaNombre" class="font-bold text-black text-sm"></span> y cuenta con incidencias.</p>
             <div class="bg-red-50 p-2.5 rounded-lg my-3 text-[11px] text-red-800 font-mono font-bold leading-tight">PROHIBIDA SEGUNDA OPORTUNIDAD.<br>REGRESAR PAQUETE A ORIGEN DE INMEDIATO.</div>
             <button onclick="cerrarAlerta()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs transition">Entendido / Bloquear Entrada</button>
         </div>
     </div>
 
     <script>
-        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v6')) || [];
-        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v6')) || [];
+        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v7')) || [];
+        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v7')) || [];
         let ESTADO_FILTRO_ACTUAL = "Todos";
 
         // CANVAS DE FIRMA
@@ -218,15 +207,13 @@
             if (!e.touches) e.preventDefault();
         }
 
-        function detenerDibujo() { dibujando = false; }
-
         canvas.addEventListener('mousedown', arrancarDibujo);
         canvas.addEventListener('mousemove', moverDibujo);
-        canvas.addEventListener('mouseup', detenerDibujo);
-        canvas.addEventListener('mouseleave', detenerDibujo);
+        canvas.addEventListener('mouseup', () => dibujando = false);
+        canvas.addEventListener('mouseleave', () => dibujando = false);
         canvas.addEventListener('touchstart', arrancarDibujo, { passive: false });
         canvas.addEventListener('touchmove', moverDibujo, { passive: false });
-        canvas.addEventListener('touchend', detenerDibujo);
+        canvas.addEventListener('touchend', () => dibujando = false);
 
         function limpiarFirma() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -237,38 +224,25 @@
         function cambiarPestaña(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById(tabId).classList.remove('hidden');
+            const tabs = ['btn-registro', 'btn-paquetes', 'btn-clientes'];
+            tabs.forEach(t => document.getElementById(t).className = "w-1/3 py-3 text-xs font-bold text-gray-500 border-b-2 border-transparent transition");
+            
+            const activeBtn = document.getElementById(tabId.replace('tab-', 'btn-'));
+            activeBtn.className = "w-1/3 py-3 text-xs font-bold text-blue-600 border-b-2 border-blue-600 transition";
 
-            const btnReg = document.getElementById('btn-registro');
-            const btnPaq = document.getElementById('btn-paquetes');
-            const btnCli = document.getElementById('btn-clientes');
-
-            btnReg.className = btnPaq.className = btnCli.className = "w-1/3 py-3 text-xs font-bold text-gray-500 border-b-2 border-transparent hover:text-gray-700 transition focus:outline-none";
-
-            if (tabId === 'tab-registro') {
-                btnReg.className = "w-1/3 py-3 text-xs font-bold text-blue-600 border-b-2 border-blue-600 transition focus:outline-none";
-            } else if (tabId === 'tab-paquetes') {
-                btnPaq.className = "w-1/3 py-3 text-xs font-bold text-blue-600 border-b-2 border-blue-600 transition focus:outline-none";
-                listarPaquetes();
-            } else if (tabId === 'tab-clientes') {
-                btnCli.className = "w-1/3 py-3 text-xs font-bold text-blue-600 border-b-2 border-blue-600 transition focus:outline-none";
-                listarClientes();
-            }
+            if (tabId === 'tab-paquetes') listarPaquetes();
+            if (tabId === 'tab-clientes') listarClientes();
         }
 
         function filtrarPorEstado(nuevoEstado) {
             ESTADO_FILTRO_ACTUAL = nuevoEstado;
             ['Todos', 'Dia 1', 'Dia 2', 'Dia 3', 'Entregado'].forEach(est => {
-                const btn = document.getElementById(`btn-f-${est}`);
-                if (est === nuevoEstado) {
-                    btn.className = "py-1.5 rounded bg-white shadow-xs font-extrabold text-slate-900";
-                } else {
-                    btn.className = `py-1.5 rounded text-gray-400 ${est==='Dia 1'?'text-blue-500':est==='Dia 2'?'text-amber-500':est==='Dia 3'?'text-red-500':est==='Entregado'?'text-green-500':''}`;
-                }
+                document.getElementById(`btn-f-${est}`).className = est === nuevoEstado ? "py-1.5 rounded bg-white shadow-xs font-extrabold text-slate-900" : `py-1.5 rounded text-gray-400`;
             });
             listarPaquetes();
         }
 
-        // REGISTRAR (DÍA 1)
+        // REGISTRAR PAQUETE (DÍA 1) CON VALIDACIONES DE SEGURIDAD AVANZADAS
         function registrarDia1(event) {
             event.preventDefault();
 
@@ -276,18 +250,34 @@
             const telefono = document.getElementById('inputTelefono').value.trim();
             const nombre = document.getElementById('inputNombre').value.trim();
 
-            const clienteExistente = DB_CLIENTES.find(c => c.telefono === telefono || c.nombre.toLowerCase() === nombre.toLowerCase());
-            if (clienteExistente && clienteExistente.incidencias > 0) {
-                document.getElementById('alertaNombre').textContent = nombre;
-                document.getElementById('modalAlerta').classList.remove('hidden');
-                return;
+            // 1. Buscar si el NÚMERO DE CELULAR ya existe registrado
+            const clientePorTelefono = DB_CLIENTES.find(c => c.telefono === telefono);
+            
+            if (clientePorTelefono) {
+                // Si el número existe pero lo quieren registrar con OTRO nombre, frenar por seguridad de identidad
+                if (clientePorTelefono.nombre.toLowerCase() !== nombre.toLowerCase()) {
+                    alert(`🚫 Error: El número ${telefono} ya pertenece a "${clientePorTelefono.nombre.toUpperCase()}". No se puede registrar a otra persona con el mismo celular.`);
+                    return;
+                }
+
+                // Si el número existe y tiene incidencias de abandono acumuladas -> Bloquear Entrada
+                if (clientePorTelefono.incidencias > 0) {
+                    document.getElementById('alertaNombre').textContent = clientePorTelefono.nombre;
+                    document.getElementById('modalAlerta').classList.remove('hidden');
+                    return;
+                }
+            } else {
+                // Si el celular es completamente nuevo, creamos la persona en la base de datos
+                DB_CLIENTES.push({
+                    id: Date.now(),
+                    nombre: nombre,
+                    telefono: telefono,
+                    incidencias: 0
+                });
+                localStorage.setItem('db_clientes_v7', JSON.stringify(DB_CLIENTES));
             }
 
-            if (!clienteExistente) {
-                DB_CLIENTES.push({ id: Date.now(), nombre: nombre, telefono: telefono, incidencias: 0 });
-                localStorage.setItem('db_clientes_v6', JSON.stringify(DB_CLIENTES));
-            }
-
+            // Registrar el paquete ligado a ese celular
             DB_PAQUETES.push({
                 id: Date.now(),
                 guia: guia,
@@ -299,209 +289,136 @@
                 archivado: false
             });
 
-            localStorage.setItem('db_paquetes_v6', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v7', JSON.stringify(DB_PAQUETES));
             alert("✅ Paquete ingresado con éxito en Día 1.");
             document.getElementById('formRegistro').reset();
         }
 
-        // MOSTRAR PAQUETES (OCULTA LOS ARCHIVADOS TRAS EL CORTE)
+        // LISTAR PAQUETES ACTIVOS
         function listarPaquetes() {
             const filtro = document.getElementById('buscarPaquete').value.toLowerCase().trim();
             const contenedor = document.getElementById('contenedorPaquetes');
             contenedor.innerHTML = '';
 
-            // Solo mostramos paquetes que NO estén archivados por un corte de caja previo
-            let filtrados = DB_PAQUETES.filter(p => !p.archivado && (p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro)));
-            
-            if (ESTADO_FILTRO_ACTUAL !== "Todos") {
-                filtrados = filtrados.filter(p => p.estado === ESTADO_FILTRO_ACTUAL);
-            }
+            let filtrados = DB_PAQUETES.filter(p => !p.archivado && (p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro) || p.telefono.includes(filtro)));
+            if (ESTADO_FILTRO_ACTUAL !== "Todos") filtrados = filtrados.filter(p => p.estado === ESTADO_FILTRO_ACTUAL);
 
             if (filtrados.length === 0) {
-                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay paquetes activos en esta lista.</p>`;
+                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay registros activos.</p>`;
                 return;
             }
 
             filtrados.reverse().forEach(p => {
-                let colorClase = "border-blue-500 bg-blue-50/50";
-                let textoEstado = "🔵 Día 1: En Base";
-                let botonVerFirma = "";
-
-                if (p.estado === "Dia 2") {
-                    colorClase = "border-amber-500 bg-amber-50/50";
-                    textoEstado = "🟡 Día 2: Solicitud Firmada";
-                } else if (p.estado === "Dia 3") {
-                    colorClase = "border-red-500 bg-red-50/50";
-                    textoEstado = "🔴 Día 3: Devuelto a Origen";
-                } else if (p.estado === "Entregado") {
-                    colorClase = "border-green-500 bg-green-50/50";
-                    textoEstado = "🟢 Entregado con Éxito";
-                }
-
-                // Si tiene una firma guardada, le habilitamos el botón para inspeccionar la evidencia
-                if (p.firma) {
-                    botonVerFirma = `<button onclick="abrirModalEvidencia(${p.id})" class="bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-[10px] hover:bg-blue-700 transition">👁️ Ver</button>`;
-                }
+                let colorClase = p.estado==="Dia 2" ? "border-amber-500 bg-amber-50/50" : p.estado==="Dia 3" ? "border-red-500 bg-red-50/50" : p.estado==="Entregado" ? "border-green-500 bg-green-50/50" : "border-blue-500 bg-blue-50/50";
+                let textoEstado = p.estado==="Dia 2" ? "🟡 Día 2: Solicitud Firmada" : p.estado==="Dia 3" ? "🔴 Día 3: Devuelto a Origen" : p.estado==="Entregado" ? "🟢 Entregado con Éxito" : "🔵 Día 1: En Base";
+                let botonVerFirma = p.firma ? `<button onclick="abrirModalEvidencia(${p.id})" class="bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-[10px] hover:bg-blue-700 transition">👁️ Ver</button>` : "";
 
                 const div = document.createElement('div');
                 div.className = `border-l-4 p-3 rounded-xl flex justify-between items-center shadow-xs text-xs bg-white ${colorClase}`;
                 div.innerHTML = `
                     <div class="space-y-0.5">
                         <div class="font-mono font-bold text-gray-800">${p.guia}</div>
-                        <div class="text-gray-600 font-medium capitalize">👤 ${p.nombre}</div>
+                        <div class="text-gray-600 font-medium capitalize">👤 ${p.nombre} (<span class="font-mono text-blue-600">${p.telefono}</span>)</div>
                         <div class="text-[10px] text-gray-400 font-mono">${textoEstado}</div>
                     </div>
                     <div class="flex gap-1">
                         ${botonVerFirma}
-                        <button onclick="abrirModalEditar(${p.id})" class="bg-slate-700 text-white font-bold py-1 px-2.5 rounded-lg text-[11px] hover:bg-slate-800 transition">⚙️ Editar</button>
+                        <button onclick="abrirModalEditar(${p.id})" class="bg-slate-700 text-white font-bold py-1 px-2.5 rounded-lg text-[11px] hover:bg-slate-800 transition">⚙️ </button>
                     </div>
                 `;
                 contenedor.appendChild(div);
             });
         }
 
-        // REALIZAR CORTE / ARCHIVAR TRABAJO FINALIZADO
+        // CORTE DE ARCHIVO
         function realizarCorte() {
-            const listosParaArchivar = DB_PAQUETES.filter(p => !p.archivado && (p.estado === "Dia 3" || p.estado === "Entregado"));
-            
-            if (listosParaArchivar.length === 0) {
-                alert("ℹ️ No hay paquetes en estado 'Entregado' o 'Día 3' para archivar en este momento.");
-                return;
-            }
+            const listos = DB_PAQUETES.filter(p => !p.archivado && (p.estado === "Dia 3" || p.estado === "Entregado"));
+            if (listos.length === 0) { alert("ℹ️ No hay paquetes finalizados para archivar."); return; }
 
-            if (confirm(`¿Deseas realizar el corte de caja? Se archivarán ${listosParaArchivar.length} paquetes finalizados y se limpiará la pantalla de trabajo.`)) {
-                DB_PAQUETES.forEach(p => {
-                    if (p.estado === "Dia 3" || p.estado === "Entregado") {
-                        p.archivado = true;
-                    }
-                });
-                localStorage.setItem('db_paquetes_v6', JSON.stringify(DB_PAQUETES));
+            if (confirm(`¿Deseas archivar ${listos.length} paquetes finalizados?`)) {
+                DB_PAQUETES.forEach(p => { if (p.estado === "Dia 3" || p.estado === "Entregado") p.archivado = true; });
+                localStorage.setItem('db_paquetes_v7', JSON.stringify(DB_PAQUETES));
                 listarPaquetes();
-                alert("🗂️ Corte completado. Los paquetes se movieron al archivo histórico.");
             }
         }
 
-        // VENTANA FLOTANTE PARA VER LA EVIDENCIA DE LA FIRMA
+        // VER EVIDENCIA
         function abrirModalEvidencia(idPaquete) {
-            const paquete = DB_PAQUETES.find(p => p.id === idPaquete);
-            if (!paquete) return;
-
-            document.getElementById('eviGuia').textContent = paquete.guia;
-            document.getElementById('eviNombre').textContent = paquete.nombre;
-            document.getElementById('eviTel').textContent = paquete.telefono;
-            document.getElementById('eviEstado').textContent = paquete.estado === "Dia 2" ? "🟡 Día 2 (Rescatado)" : "🟢 Entregado";
-            document.getElementById('eviFecha').textContent = paquete.fecha;
-            
-            const img = document.getElementById('imgFirmaEvidencia');
-            if (paquete.firma) {
-                img.src = paquete.firma;
-                img.classList.remove('hidden');
-            } else {
-                img.src = "";
-            }
-
+            const p = DB_PAQUETES.find(pa => pa.id === idPaquete);
+            if (!p) return;
+            document.getElementById('eviGuia').textContent = p.guia;
+            document.getElementById('eviNombre').textContent = p.nombre;
+            document.getElementById('eviTel').textContent = p.telefono;
+            document.getElementById('eviEstado').textContent = p.estado==="Dia 2"?"🟡 Día 2 (Rescatado)":"🟢 Entregado";
+            document.getElementById('eviFecha').textContent = p.fecha;
+            document.getElementById('imgFirmaEvidencia').src = p.firma || "";
             document.getElementById('modalEvidencia').classList.remove('hidden');
         }
 
-        function cerrarModalEvidencia() {
-            document.getElementById('modalEvidencia').classList.add('hidden');
-        }
+        function cerrarModalEvidencia() { document.getElementById('modalEvidencia').classList.add('hidden'); }
 
-        // EDITAR PAQUETE
+        // EDITAR ESTADO DE PAQUETE
         function abrirModalEditar(idPaquete) {
-            const paquete = DB_PAQUETES.find(p => p.id === idPaquete);
-            if (!paquete) return;
-
-            document.getElementById('modalIdPaquete').value = paquete.id;
-            document.getElementById('modalGuiaTitulo').textContent = paquete.guia;
-            document.getElementById('modalEstado').value = paquete.estado;
-
+            const p = DB_PAQUETES.find(pa => pa.id === idPaquete);
+            if (!p) return;
+            document.getElementById('modalIdPaquete').value = p.id;
+            document.getElementById('modalGuiaTitulo').textContent = p.guia;
+            document.getElementById('modalEstado').value = p.estado;
             document.getElementById('modalEditar').classList.remove('hidden');
-            
-            setTimeout(() => {
-                ajustarCanvas();
-                evaluarLienzoFirma();
-            }, 150);
+            setTimeout(() => { ajustarCanvas(); evaluarLienzoFirma(); }, 150);
         }
 
         function evaluarLienzoFirma() {
-            const estado = document.getElementById('modalEstado').value;
-            const seccionFirma = document.getElementById('seccionFirmaModal');
-            const etiqueta = document.getElementById('etiquetaFirma');
-
-            if (estado === "Dia 2") {
-                seccionFirma.classList.remove('hidden');
-                etiqueta.textContent = "✍️ Firma de Solicitud (Día 2)";
+            const est = document.getElementById('modalEstado').value;
+            const sec = document.getElementById('seccionFirmaModal');
+            const et = document.getElementById('etiquetaFirma');
+            if (est === "Dia 2" || est === "Entregado") {
+                sec.classList.remove('hidden');
+                et.textContent = est === "Dia 2" ? "✍️ Firma de Solicitud (Día 2)" : "✍️ Firma de Recibido Conforme";
                 ajustarCanvas();
-            } else if (estado === "Entregado") {
-                seccionFirma.classList.remove('hidden');
-                etiqueta.textContent = "✍️ Firma de Recibido de Conformidad";
-                ajustarCanvas();
-            } else {
-                seccionFirma.classList.add('hidden');
-            }
+            } else { sec.classList.add('hidden'); }
         }
 
         function guardarCambiosPaquete() {
             const id = parseInt(document.getElementById('modalIdPaquete').value);
-            const nuevoEstado = document.getElementById('modalEstado').value;
-            
-            const paqueteIndex = DB_PAQUETES.findIndex(p => p.id === id);
-            if (paqueteIndex === -1) return;
+            const est = document.getElementById('modalEstado').value;
+            const idx = DB_PAQUETES.findIndex(p => p.id === id);
+            if (idx === -1) return;
 
-            const paquete = DB_PAQUETES[paqueteIndex];
-            paquete.estado = nuevoEstado;
+            const p = DB_PAQUETES[idx];
+            p.estado = est;
 
-            if (nuevoEstado === "Dia 2" || nuevoEstado === "Entregado") {
-                const copiaCanvas = document.createElement('canvas');
-                copiaCanvas.width = canvas.width;
-                copiaCanvas.height = canvas.height;
-                if (canvas.toDataURL() !== copiaCanvas.toDataURL()) {
-                    paquete.firma = canvas.toDataURL();
-                }
+            if (est === "Dia 2" || est === "Entregado") {
+                const c = document.createElement('canvas'); c.width = canvas.width; c.height = canvas.height;
+                if (canvas.toDataURL() !== c.toDataURL()) p.firma = canvas.toDataURL();
             }
 
-            if (nuevoEstado === "Dia 3") {
-                const cliente = DB_CLIENTES.find(c => c.telefono === paquete.telefono || c.nombre.toLowerCase() === paquete.nombre.toLowerCase());
-                if (cliente) {
-                    cliente.incidencias += 1;
-                    localStorage.setItem('db_clientes_v6', JSON.stringify(DB_CLIENTES));
-                }
+            // Si el paquete se va definitivo a Devolución (Día 3), penalizar al celular dueño de por vida
+            if (est === "Dia 3") {
+                const cli = DB_CLIENTES.find(c => c.telefono === p.telefono);
+                if (cli) { cli.incidencias += 1; localStorage.setItem('db_clientes_v7', JSON.stringify(DB_CLIENTES)); }
             }
 
-            localStorage.setItem('db_paquetes_v6', JSON.stringify(DB_PAQUETES));
-            cerrarModalEditar();
-            listarPaquetes();
-            alert("🔄 Estatus del paquete actualizado.");
-        }
-
-        function cerrarModalEditar() {
+            localStorage.setItem('db_paquetes_v7', JSON.stringify(DB_PAQUETES));
             document.getElementById('modalEditar').classList.add('hidden');
             limpiarFirma();
+            listarPaquetes();
         }
 
-        // PESTAÑA 3: GESTIÓN Y EDICIÓN CORRECTA DE CLIENTES
-        function listarClientes() {
-            const filtro = document.getElementById('buscarCliente').value.toLowerCase().trim();
-            const contenedor = document.getElementById('contenedorClientes');
-            contenedor.innerHTML = '';
+        function cerrarModalEditar() { document.getElementById('modalEditar').classList.add('hidden'); limpiarFirma(); }
 
-            const filtrados = DB_CLIENTES.filter(c => c.nombre.toLowerCase().includes(filtro) || c.telefono.includes(filtro));
+        // PESTAÑA CLIENTES CON EDICIÓN CORREGIDA
+        function listarClientes() {
+            const f = document.getElementById('buscarCliente').value.toLowerCase().trim();
+            const cont = document.getElementById('contenedorClientes');
+            cont.innerHTML = '';
+
+            const filtrados = DB_CLIENTES.filter(c => c.nombre.toLowerCase().includes(f) || c.telefono.includes(f));
 
             filtrados.forEach(c => {
-                let colorMarca = "bg-green-100 text-green-800";
-                let textoMarca = "🟢 Limpio";
-                let botonLimpiar = "";
-
-                if (c.incidencias > 0) {
-                    colorMarca = "bg-red-100 text-red-800 font-bold";
-                    textoMarca = `⚠️ REINCIDENTE (${c.incidencias})`;
-                    botonLimpiar = `
-                        <button onclick="limpiarPenalizacion(${c.id})" class="ml-2 bg-green-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-green-700 transition">
-                            🟢 Perdonar
-                        </button>
-                    `;
-                }
+                let color = c.incidencias > 0 ? "bg-red-100 text-red-800 font-bold" : "bg-green-100 text-green-800";
+                let txt = c.incidencias > 0 ? `⚠️ REINCIDENTE (${c.incidencias})` : "🟢 Limpio";
+                let btnPerdonar = c.incidencias > 0 ? `<button onclick="perdonar(${c.id})" class="bg-green-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-green-700 transition">🟢</button>` : "";
 
                 const div = document.createElement('div');
                 div.className = "bg-white border border-gray-200 p-3 rounded-xl shadow-xs text-xs flex justify-between items-center";
@@ -511,103 +428,95 @@
                         <div class="text-gray-500 font-mono">📱 Cel: ${c.telefono}</div>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="px-2 py-1 rounded text-[10px] ${colorMarca}">${textoMarca}</span>
-                        ${botonLimpiar}
-                        <button onclick="abrirModalEditarCliente(${c.id})" class="bg-gray-700 text-white px-2 py-0.5 rounded text-[10px] font-bold hover:bg-gray-800 transition">
-                            ✏️ Editar
-                        </button>
+                        <span class="px-2 py-1 rounded text-[10px] ${color}">${txt}</span>
+                        ${btnPerdonar}
+                        <button onclick="abrirModalEditarCliente(${c.id})" class="bg-gray-700 text-white px-2 py-0.5 rounded text-[10px] font-bold hover:bg-gray-800 transition">✏️ Editar</button>
                     </div>
                 `;
-                contenedor.appendChild(div);
+                cont.appendChild(div);
             });
         }
 
-        // CORRECCIÓN: FUNCIÓN PARA ABRIR LA EDICIÓN DE PERSONAS
-        function abrirModalEditarCliente(idCliente) {
-            const cliente = DB_CLIENTES.find(c => c.id === idCliente);
-            if (!cliente) return;
-
-            document.getElementById('editClientId').value = cliente.id;
-            document.getElementById('editClientNombre').value = cliente.nombre;
-            document.getElementById('editClientTelefono').value = cliente.telefono;
-
+        function abrirModalEditarCliente(id) {
+            const c = DB_CLIENTES.find(cli => cli.id === id);
+            if (!c) return;
+            document.getElementById('editClientId').value = c.id;
+            document.getElementById('editClientNombre').value = c.nombre;
+            document.getElementById('editClientTelefono').value = c.telefono;
             document.getElementById('modalEditarCliente').classList.remove('hidden');
         }
 
         function guardarCambiosCliente() {
             const id = parseInt(document.getElementById('editClientId').value);
-            const nuevoNombre = document.getElementById('editClientNombre').value.trim();
-            const nuevoTelefono = document.getElementById('editClientTelefono').value.trim();
+            const nom = document.getElementById('editClientNombre').value.trim();
+            const tel = document.getElementById('editClientTelefono').value.trim();
 
-            const index = DB_CLIENTES.findIndex(c => c.id === id);
-            if (index === -1) return;
+            // Validación al editar: que el celular nuevo no lo tenga ya otra persona diferente
+            const duplicado = DB_CLIENTES.find(c => c.telefono === tel && c.id !== id);
+            if (duplicado) {
+                alert(`🚫 El número ${tel} ya está en uso por "${duplicado.nombre.toUpperCase()}". No puedes duplicar celulares.`);
+                return;
+            }
 
-            // Actualizar en la base de datos de clientes
-            DB_CLIENTES[index].nombre = nuevoNombre;
-            DB_CLIENTES[index].telefono = nuevoTelefono;
-            localStorage.setItem('db_clientes_v6', JSON.stringify(DB_CLIENTES));
+            const idx = DB_CLIENTES.findIndex(c => c.id === id);
+            if (idx === -1) return;
 
-            cerrarModalEditarCliente();
-            listarClientes();
-            alert("👤 Datos del cliente corregidos correctamente.");
-        }
+            // Actualizar también en el historial de paquetes amarrados a este cliente
+            const telefonoViejo = DB_CLIENTES[idx].telefono;
+            DB_PAQUETES.forEach(p => {
+                if (p.telefono === telefonoViejo) {
+                    p.nombre = nom;
+                    p.telefono = tel;
+                }
+            });
 
-        function cerrarModalEditarCliente() {
+            DB_CLIENTES[idx].nombre = nom;
+            DB_CLIENTES[idx].telefono = tel;
+
+            localStorage.setItem('db_clientes_v7', JSON.stringify(DB_CLIENTES));
+            localStorage.setItem('db_paquetes_v7', JSON.stringify(DB_PAQUETES));
+            
             document.getElementById('modalEditarCliente').classList.add('hidden');
+            listarClientes();
+            alert("👤 Cambios del cliente aplicados con éxito.");
         }
 
-        function limpiarPenalizacion(idCliente) {
-            const index = DB_CLIENTES.findIndex(c => c.id === idCliente);
-            if (index === -1) return;
+        function cerrarModalEditarCliente() { document.getElementById('modalEditarCliente').classList.add('hidden'); }
 
-            if (confirm(`¿Estás seguro de limpiar el historial de ${DB_CLIENTES[index].nombre}?`)) {
-                DB_CLIENTES[index].incidencias = 0;
-                localStorage.setItem('db_clientes_v6', JSON.stringify(DB_CLIENTES));
+        function perdonar(id) {
+            const idx = DB_CLIENTES.findIndex(c => c.id === id);
+            if (idx !== -1 && confirm(`¿Limpiar el historial de ${DB_CLIENTES[idx].nombre}?`)) {
+                DB_CLIENTES[idx].incidencias = 0;
+                localStorage.setItem('db_clientes_v7', JSON.stringify(DB_CLIENTES));
                 listarClientes();
             }
         }
 
-        // CÁMARA ESCÁNER
+        // ESCÁNER CÁMARA
         let html5QrcodeScanner;
         function alternarEscaner() {
             const lectorDiv = document.getElementById('lector-qr');
             const btn = document.getElementById('btnEscanner');
-
             if (lectorDiv.classList.contains('hidden')) {
-                lectorDiv.classList.remove('hidden');
-                btn.textContent = "🛑 Apagar Cámara";
-                btn.classList.replace('bg-blue-600', 'bg-gray-600');
-
+                lectorDiv.classList.remove('hidden'); btn.textContent = "🛑 Apagar Cámara"; btn.classList.replace('bg-blue-600', 'bg-gray-600');
                 html5QrcodeScanner = new Html5Qrcode("lector-qr");
-                html5QrcodeScanner.start(
-                    { facingMode: "environment" },
-                    { fps: 10, qrbox: { width: 250, height: 140 } },
-                    (decodedText) => {
-                        document.getElementById('inputGuia').value = decodedText.toUpperCase();
-                        detenerEscaner();
-                    },
-                    (errorMessage) => {}
-                ).catch(err => alert("Error de cámara: " + err));
-            } else {
-                detenerEscaner();
-            }
+                html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 140 } }, (txt) => {
+                    document.getElementById('inputGuia').value = txt.toUpperCase(); detenerEscaner();
+                }, () => {}).catch(err => alert("Error: " + err));
+            } else { detenerEscaner(); }
         }
 
         function detenerEscaner() {
             if (html5QrcodeScanner) {
                 html5QrcodeScanner.stop().then(() => {
                     document.getElementById('lector-qr').classList.add('hidden');
-                    const btn = document.getElementById('btnEscanner');
-                    btn.textContent = "📷 Activar Escáner de Guía";
-                    btn.classList.replace('bg-gray-600', 'bg-blue-600');
+                    document.getElementById('btnEscanner').textContent = "📷 Activar Escáner de Guía";
+                    document.getElementById('btnEscanner').classList.replace('bg-gray-600', 'bg-blue-600');
                 });
             }
         }
 
-        function cerrarAlerta() {
-            document.getElementById('modalAlerta').classList.add('hidden');
-            document.getElementById('formRegistro').reset();
-        }
+        function cerrarAlerta() { document.getElementById('modalAlerta').classList.add('hidden'); document.getElementById('formRegistro').reset(); }
     </script>
 </body>
 </html>
