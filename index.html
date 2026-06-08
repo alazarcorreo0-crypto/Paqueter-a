@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Control Última Milla v8</title>
+    <title>Sistema de Control Última Milla v9</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -18,8 +18,8 @@
 
     <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-2 flex flex-col min-h-[650px]">
         <header class="bg-slate-800 text-white p-4 text-center">
-            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v8</h1>
-            <p class="text-xs text-slate-400 mt-0.5">Soporte Multipaquete y Autocompletado</p>
+            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v9</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Visor de Historial Archivados y Cortes</p>
         </header>
 
         <nav class="flex border-b border-gray-200 bg-gray-50 text-center">
@@ -65,13 +65,23 @@
 
             <div id="tab-paquetes" class="space-y-3 tab-content hidden">
                 <div class="flex justify-between items-center gap-2">
-                    <input type="text" id="buscarPaquete" oninput="listarPaquetes()" placeholder="🔍 Buscar por guía o nombre..." class="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-slate-500">
+                    <input type="text" id="buscarPaquete" oninput="listarPaquetes()" placeholder="🔍 Buscar por guía, cel o nombre..." class="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-slate-500">
                     <button onclick="realizarCorte()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-3 rounded-lg text-[10px] whitespace-nowrap shadow-xs transition">
                         🗂️ Hacer Corte
                     </button>
                 </div>
+
+                <div class="flex justify-between items-center bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs">
+                    <span class="font-medium text-slate-700 flex items-center gap-1">📁 Modo de visualización:</span>
+                    <label class="inline-flex items-center cursor-pointer">
+                        <select id="switchArchivo" onchange="listarPaquetes()" class="bg-white border rounded p-1 font-bold text-slate-800 text-[11px] focus:outline-none">
+                            <option value="activos">📦 Ver lo de Hoy (Oficina)</option>
+                            <option value="archivados">🗄️ Ver Historial (Archivados)</option>
+                        </select>
+                    </label>
+                </div>
                 
-                <div class="grid grid-cols-5 gap-1 bg-gray-100 p-1 rounded-lg text-[9px] font-bold text-center">
+                <div id="barraFiltrosEstados" class="grid grid-cols-5 gap-1 bg-gray-100 p-1 rounded-lg text-[9px] font-bold text-center">
                     <button onclick="filtrarPorEstado('Todos')" id="btn-f-Todos" class="py-1.5 rounded bg-white shadow-xs text-gray-800">Todos</button>
                     <button onclick="filtrarPorEstado('Dia 1')" id="btn-f-Dia1" class="py-1.5 rounded text-blue-600">🔵 D1</button>
                     <button onclick="filtrarPorEstado('Dia 2')" id="btn-f-Dia2" class="py-1.5 rounded text-amber-600">🟡 D2</button>
@@ -79,7 +89,7 @@
                     <button onclick="filtrarPorEstado('Entregado')" id="btn-f-Entregado" class="py-1.5 rounded text-green-600">🟢 Entreg.</button>
                 </div>
 
-                <div id="contenedorPaquetes" class="space-y-2 max-h-[350px] overflow-y-auto pr-1"></div>
+                <div id="contenedorPaquetes" class="space-y-2 max-h-[310px] overflow-y-auto pr-1"></div>
             </div>
 
             <div id="tab-clientes" class="space-y-3 tab-content hidden">
@@ -113,14 +123,14 @@
                 </div>
                 <canvas id="canvasFirma" class="w-full h-32 rounded-lg"></canvas>
             </div>
-            <button onclick="guardarCambiosPaquete()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">💾 Aplicar Cambios / Procesar</button>
+            <button onclick="guardarCambiosPaquete()" class="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs shadow-md">💾 Aplicar Cambios</button>
         </div>
     </div>
 
     <div id="modalEvidencia" class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3 shadow-2xl">
             <div class="flex justify-between items-center border-b pb-2">
-                <h3 class="font-bold text-gray-800 text-sm">📋 Evidencia del Paquete</h3>
+                <h3 class="font-bold text-gray-800 text-sm">📋 Evidencia de Firma Digital</h3>
                 <button onclick="cerrarModalEvidencia()" class="text-gray-400 text-lg font-bold hover:text-gray-600">×</button>
             </div>
             <div class="text-xs space-y-1 text-gray-700">
@@ -152,7 +162,7 @@
                 <label class="block text-[11px] font-bold text-gray-500 uppercase mb-0.5">Número de Teléfono</label>
                 <input type="tel" id="editClientTelefono" inputmode="numeric" pattern="[0-9]*" class="w-full border border-gray-300 rounded-lg p-2 text-xs font-mono focus:outline-none">
             </div>
-            <button onclick="guardarCambiosCliente()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-xl text-xs shadow-md">💾 Guardar Corrección</button>
+            <button onclick="guardarCambiosCliente()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-xl text-xs shadow-md">💾 Guardar Corrección</button>
         </div>
     </div>
 
@@ -162,13 +172,13 @@
             <h3 class="text-lg font-extrabold text-red-600 uppercase tracking-tight">¡REINCIDENTE DETECTADO!</h3>
             <p class="text-gray-700 mt-1 text-xs">El celular ingresado le pertenece a <span id="alertaNombre" class="font-bold text-black text-sm"></span> y cuenta con incidencias.</p>
             <div class="bg-red-50 p-2.5 rounded-lg my-3 text-[11px] text-red-800 font-mono font-bold leading-tight">PROHIBIDA SEGUNDA OPORTUNIDAD.<br>REGRESAR PAQUETE A ORIGEN DE INMEDIATO.</div>
-            <button onclick="cerrarAlerta()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg text-xs transition">Entendido / Bloquear Entrada</button>
+            <button onclick="cerrarAlerta()" class="w-full bg-red-600 text-white font-bold py-2 rounded-lg text-xs transition">Entendido / Bloquear Entrada</button>
         </div>
     </div>
 
     <script>
-        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v8')) || [];
-        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v8')) || [];
+        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v9')) || [];
+        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v9')) || [];
         let ESTADO_FILTRO_ACTUAL = "Todos";
 
         // CANVAS DE FIRMA
@@ -230,7 +240,10 @@
             const activeBtn = document.getElementById(tabId.replace('tab-', 'btn-'));
             activeBtn.className = "w-1/3 py-3 text-xs font-bold text-blue-600 border-b-2 border-blue-600 transition";
 
-            if (tabId === 'tab-paquetes') listarPaquetes();
+            if (tabId === 'tab-paquetes') {
+                document.getElementById('switchArchivo').value = "activos"; // Por defecto ver activos
+                listarPaquetes();
+            }
             if (tabId === 'tab-clientes') listarClientes();
         }
 
@@ -242,24 +255,20 @@
             listarPaquetes();
         }
 
-        // FUNCIÓN NUEVA: AUTOCOMPLETADO INTELIGENTE AL TECLEAR EL CELULAR
         function detectarClienteRapido() {
             const telefono = document.getElementById('inputTelefono').value.trim();
             const cliente = DB_CLIENTES.find(c => c.telefono === telefono);
-            
             if (cliente) {
-                // Si el cliente está bloqueado, dispara la alerta roja inmediatamente al escribir
                 if (cliente.incidencias > 0) {
                     document.getElementById('alertaNombre').textContent = cliente.nombre;
                     document.getElementById('modalAlerta').classList.remove('hidden');
                     return;
                 }
-                // Si está limpio, autocompleta el campo de texto con su nombre guardado
                 document.getElementById('inputNombre').value = cliente.nombre;
             }
         }
 
-        // REGISTRAR PAQUETE (CORREGIDO PARA MULTIPLES GUÍAS POR PERSONA)
+        // REGISTRAR PAQUETE (DÍA 1)
         function registrarDia1(event) {
             event.preventDefault();
 
@@ -267,31 +276,26 @@
             const telefono = document.getElementById('inputTelefono').value.trim();
             const nombre = document.getElementById('inputNombre').value.trim();
 
-            // Validar que la misma guía no se registre dos veces por error humano
             const guiaDuplicada = DB_PAQUETES.find(p => p.guia === guia && !p.archivado);
             if (guiaDuplicada) {
-                alert(`⚠️ La guía ${guia} ya se encuentra registrada en la base de datos.`);
+                alert(`⚠️ La guía ${guia} ya está en la oficina actualmente.`);
                 return;
             }
 
             const clientePorTelefono = DB_CLIENTES.find(c => c.telefono === telefono);
-            
             if (clientePorTelefono) {
                 if (clientePorTelefono.incidencias > 0) {
                     document.getElementById('alertaNombre').textContent = clientePorTelefono.nombre;
                     document.getElementById('modalAlerta').classList.remove('hidden');
                     return;
                 }
-                // Si existe y está limpio, el sistema actualiza el nombre por si cambió y procede libremente
                 clientePorTelefono.nombre = nombre;
-                localStorage.setItem('db_clientes_v8', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v9', JSON.stringify(DB_CLIENTES));
             } else {
-                // Si el celular es nuevo, se da de alta en la base de datos
                 DB_CLIENTES.push({ id: Date.now(), nombre: nombre, telefono: telefono, incidencias: 0 });
-                localStorage.setItem('db_clientes_v8', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v9', JSON.stringify(DB_CLIENTES));
             }
 
-            // Registrar el paquete (Ahora permite infinitos paquetes vinculados al mismo celular)
             DB_PAQUETES.push({
                 id: Date.now(),
                 guia: guia,
@@ -303,29 +307,58 @@
                 archivado: false
             });
 
-            localStorage.setItem('db_paquetes_v8', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v9', JSON.stringify(DB_PAQUETES));
             alert("✅ Paquete ingresado con éxito en Día 1.");
             document.getElementById('formRegistro').reset();
         }
 
-        // LISTAR PAQUETES ACTIVOS
+        // MOSTRAR PAQUETES (CORREGIDO CON EL INTERRUPTOR DE HISTORIAL)
         function listarPaquetes() {
             const filtro = document.getElementById('buscarPaquete').value.toLowerCase().trim();
             const contenedor = document.getElementById('contenedorPaquetes');
+            const modoVista = document.getElementById('switchArchivo').value; // 'activos' o 'archivados'
+            const barraFiltros = document.getElementById('barraFiltrosEstados');
             contenedor.innerHTML = '';
 
-            let filtrados = DB_PAQUETES.filter(p => !p.archivado && (p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro) || p.telefono.includes(filtro)));
-            if (ESTADO_FILTRO_ACTUAL !== "Todos") filtrados = filtrados.filter(p => p.estado === ESTADO_FILTRO_ACTUAL);
+            // Si estamos en modo historial, ocultamos la barra de filtros D1/D2 para no confundir
+            if (modoVista === "archivados") {
+                barraFiltros.classList.add('hidden');
+            } else {
+                barraFiltros.classList.remove('hidden');
+            }
+
+            // Filtrar base de datos según el switch seleccionado
+            let filtrados = DB_PAQUETES.filter(p => {
+                const cumpleFiltroTexto = p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro) || p.telefono.includes(filtro);
+                if (modoVista === "archivados") {
+                    return p.archivado && cumpleFiltroTexto; // Paquetes ocultados tras un corte
+                } else {
+                    return !p.archivado && cumpleFiltroTexto; // Paquetes de trabajo diario
+                }
+            });
+
+            // Aplicar filtros de botones de arriba (solo si no es archivo histórico)
+            if (modoVista === "activos" && ESTADO_FILTRO_ACTUAL !== "Todos") {
+                filtrados = filtrados.filter(p => p.estado === ESTADO_FILTRO_ACTUAL);
+            }
 
             if (filtrados.length === 0) {
-                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay registros activos.</p>`;
+                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay paquetes en esta lista.</p>`;
                 return;
             }
 
             filtrados.reverse().forEach(p => {
                 let colorClase = p.estado==="Dia 2" ? "border-amber-500 bg-amber-50/50" : p.estado==="Dia 3" ? "border-red-500 bg-red-50/50" : p.estado==="Entregado" ? "border-green-500 bg-green-50/50" : "border-blue-500 bg-blue-50/50";
-                let textoEstado = p.estado==="Dia 2" ? "🟡 Día 2: Solicitud Firmada" : p.estado==="Dia 3" ? "🔴 Día 3: Devuelto a Origen" : p.estado==="Entregado" ? "🟢 Entregado con Éxito" : "🔵 Día 1: En Base";
-                let botonVerFirma = p.firma ? `<button onclick="abrirModalEvidencia(${p.id})" class="bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-[10px] hover:bg-blue-700 transition">👁️ Ver</button>` : "";
+                let textoEstado = p.estado==="Dia 2" ? "🟡 Día 2: Rescatado" : p.estado==="Dia 3" ? "🔴 Día 3: Devuelto" : p.estado==="Entregado" ? "🟢 Entregado" : "🔵 Día 1: En Base";
+                
+                if (p.archivado) {
+                    textoEstado += " | 🗂️ Archivado";
+                }
+
+                let botonVerFirma = p.firma ? `<button onclick="abrirModalEvidencia(${p.id})" class="bg-blue-600 text-white font-bold py-1 px-2 rounded-lg text-[10px] hover:bg-blue-700 transition">👁️ Ver Firma</button>` : "";
+                
+                // Si el paquete ya está archivado en el historial viejo, le quitamos el botón de editar para seguridad de datos
+                let botonEditar = !p.archivado ? `<button onclick="abrirModalEditar(${p.id})" class="bg-slate-700 text-white font-bold py-1 px-2 rounded-lg text-[10px] hover:bg-slate-800 transition">⚙️ Estado</button>` : "";
 
                 const div = document.createElement('div');
                 div.className = `border-l-4 p-3 rounded-xl flex justify-between items-center shadow-xs text-xs bg-white ${colorClase}`;
@@ -335,24 +368,28 @@
                         <div class="text-gray-600 font-medium capitalize">👤 ${p.nombre} (<span class="font-mono text-blue-600">${p.telefono}</span>)</div>
                         <div class="text-[10px] text-gray-400 font-mono">${textoEstado}</div>
                     </div>
-                    <div class="flex gap-1">
+                    <div class="flex gap-1 items-center">
                         ${botonVerFirma}
-                        <button onclick="abrirModalEditar(${p.id})" class="bg-slate-700 text-white font-bold py-1 px-2.5 rounded-lg text-[11px] hover:bg-slate-800 transition">⚙️ </button>
+                        ${botonEditar}
                     </div>
                 `;
                 contenedor.appendChild(div);
             });
         }
 
-        // CORTE DE ARCHIVO
+        // CORTE DE ARCHIVO (MANDA LOS DATOS AL HISTORIAL OCULTO)
         function realizarCorte() {
             const listos = DB_PAQUETES.filter(p => !p.archivado && (p.estado === "Dia 3" || p.estado === "Entregado"));
-            if (listos.length === 0) { alert("ℹ️ No hay paquetes finalizados para archivar."); return; }
+            if (listos.length === 0) { alert("ℹ️ No hay paquetes finalizados (Entregados o Devueltos) para archivar en este corte."); return; }
 
-            if (confirm(`¿Deseas archivar ${listos.length} paquetes finalizados?`)) {
+            if (confirm(`¿Deseas archivar ${listos.length} paquetes finalizados? Se limpiará tu lista de trabajo diario.`)) {
                 DB_PAQUETES.forEach(p => { if (p.estado === "Dia 3" || p.estado === "Entregado") p.archivado = true; });
-                localStorage.setItem('db_paquetes_v8', JSON.stringify(DB_PAQUETES));
+                localStorage.setItem('db_paquetes_v9', JSON.stringify(DB_PAQUETES));
+                
+                // Forzar que la pantalla se quede en vista de activos limpia
+                document.getElementById('switchArchivo').value = "activos";
                 listarPaquetes();
+                alert("🗂️ Corte guardado. Puedes consultarlos activando el modo 'Ver Historial' en esta pestaña.");
             }
         }
 
@@ -409,10 +446,10 @@
 
             if (est === "Dia 3") {
                 const cli = DB_CLIENTES.find(c => c.telefono === p.telefono);
-                if (cli) { cli.incidencias += 1; localStorage.setItem('db_clientes_v8', JSON.stringify(DB_CLIENTES)); }
+                if (cli) { cli.incidencias += 1; localStorage.setItem('db_clientes_v9', JSON.stringify(DB_CLIENTES)); }
             }
 
-            localStorage.setItem('db_paquetes_v8', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v9', JSON.stringify(DB_PAQUETES));
             document.getElementById('modalEditar').classList.add('hidden');
             limpiarFirma();
             listarPaquetes();
@@ -431,7 +468,7 @@
             filtrados.forEach(c => {
                 let color = c.incidencias > 0 ? "bg-red-100 text-red-800 font-bold" : "bg-green-100 text-green-800";
                 let txt = c.incidencias > 0 ? `⚠️ REINCIDENTE (${c.incidencias})` : "🟢 Limpio";
-                let btnPerdonar = c.incidencias > 0 ? `<button onclick="perdonar(${c.id})" class="bg-green-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-green-700 transition">🟢</button>` : "";
+                let btnPerdonar = c.incidencias > 0 ? `<button onclick="perdonar(${c.id})" class="bg-green-600 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hover:bg-green-700 transition">🟢 Perdonar</button>` : "";
 
                 const div = document.createElement('div');
                 div.className = "bg-white border border-gray-200 p-3 rounded-xl shadow-xs text-xs flex justify-between items-center";
@@ -465,40 +502,28 @@
             const tel = document.getElementById('editClientTelefono').value.trim();
 
             const duplicado = DB_CLIENTES.find(c => c.telefono === tel && c.id !== id);
-            if (duplicado) {
-                alert(`🚫 El número ${tel} ya está en uso por "${duplicado.nombre.toUpperCase()}".`);
-                return;
-            }
+            if (duplicado) { alert(`🚫 El número ${tel} ya está en uso.`); return; }
 
             const idx = DB_CLIENTES.findIndex(c => c.id === id);
             if (idx === -1) return;
 
             const telefonoViejo = DB_CLIENTES[idx].telefono;
-            DB_PAQUETES.forEach(p => {
-                if (p.telefono === telefonoViejo) {
-                    p.nombre = nom;
-                    p.telefono = tel;
-                }
-            });
+            DB_PAQUETES.forEach(p => { if (p.telefono === telefonoViejo) { p.nombre = nom; p.telefono = tel; } });
 
-            DB_CLIENTES[idx].nombre = nom;
-            DB_CLIENTES[idx].telefono = tel;
-
-            localStorage.setItem('db_clientes_v8', JSON.stringify(DB_CLIENTES));
-            localStorage.setItem('db_paquetes_v8', JSON.stringify(DB_PAQUETES));
+            DB_CLIENTES[idx].nombre = nom; DB_CLIENTES[idx].telefono = tel;
+            localStorage.setItem('db_clientes_v9', JSON.stringify(DB_CLIENTES));
+            localStorage.setItem('db_paquetes_v9', JSON.stringify(DB_PAQUETES));
             
             document.getElementById('modalEditarCliente').classList.add('hidden');
             listarClientes();
-            alert("👤 Cambios del cliente aplicados.");
+            alert("👤 Cambios aplicados.");
         }
-
-        function cerrarModalEditarCliente() { document.getElementById('modalEditarCliente').classList.add('hidden'); }
 
         function perdonar(id) {
             const idx = DB_CLIENTES.findIndex(c => c.id === id);
             if (idx !== -1 && confirm(`¿Limpiar el historial de ${DB_CLIENTES[idx].nombre}?`)) {
                 DB_CLIENTES[idx].incidencias = 0;
-                localStorage.setItem('db_clientes_v8', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v9', JSON.stringify(DB_CLIENTES));
                 listarClientes();
             }
         }
@@ -527,7 +552,6 @@
             }
         }
 
-        document.getElementById('modalAlerta').addEventListener('click', cerrarAlerta);
         function cerrarAlerta() { document.getElementById('modalAlerta').classList.add('hidden'); document.getElementById('formRegistro').reset(); }
     </script>
 </body>
