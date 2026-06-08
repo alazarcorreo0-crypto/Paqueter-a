@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema de Control Última Milla v4</title>
+    <title>Sistema de Control Última Milla v5</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
@@ -18,8 +18,8 @@
 
     <main class="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden my-2 flex flex-col min-h-[650px]">
         <header class="bg-slate-800 text-white p-4 text-center">
-            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v4</h1>
-            <p class="text-xs text-slate-400 mt-0.5">Gestión de Alto Volumen y Penalizaciones</p>
+            <h1 class="text-lg font-bold tracking-wide">SISTEMA ÚLTIMA MILLA v5</h1>
+            <p class="text-xs text-slate-400 mt-0.5">Ciclo Completo: Entregas y Devoluciones</p>
         </header>
 
         <nav class="flex border-b border-gray-200 bg-gray-50 text-center">
@@ -66,11 +66,12 @@
             <div id="tab-paquetes" class="space-y-3 tab-content hidden">
                 <input type="text" id="buscarPaquete" oninput="listarPaquetes()" placeholder="🔍 Rápido: Buscar por guía o nombre..." class="w-full border border-gray-300 rounded-lg p-2 text-xs focus:outline-none focus:ring-1 focus:ring-slate-500">
                 
-                <div class="grid grid-cols-4 gap-1 bg-gray-100 p-1 rounded-lg text-[10px] font-bold text-center">
+                <div class="grid grid-cols-5 gap-1 bg-gray-100 p-1 rounded-lg text-[9px] font-bold text-center">
                     <button onclick="filtrarPorEstado('Todos')" id="btn-f-Todos" class="py-1.5 rounded bg-white shadow-xs text-gray-800">Todos</button>
-                    <button onclick="filtrarPorEstado('Dia 1')" id="btn-f-Dia1" class="py-1.5 rounded text-blue-600">🔵 Día 1</button>
-                    <button onclick="filtrarPorEstado('Dia 2')" id="btn-f-Dia2" class="py-1.5 rounded text-amber-600">🟡 Día 2</button>
-                    <button onclick="filtrarPorEstado('Dia 3')" id="btn-f-Dia3" class="py-1.5 rounded text-red-600">🔴 Día 3</button>
+                    <button onclick="filtrarPorEstado('Dia 1')" id="btn-f-Dia1" class="py-1.5 rounded text-blue-600">🔵 D1</button>
+                    <button onclick="filtrarPorEstado('Dia 2')" id="btn-f-Dia2" class="py-1.5 rounded text-amber-600">🟡 D2</button>
+                    <button onclick="filtrarPorEstado('Dia 3')" id="btn-f-Dia3" class="py-1.5 rounded text-red-600">🔴 Retor.</button>
+                    <button onclick="filtrarPorEstado('Entregado')" id="btn-f-Entregado" class="py-1.5 rounded text-green-600">🟢 Entreg.</button>
                 </div>
 
                 <div id="contenedorPaquetes" class="space-y-2 max-h-[350px] overflow-y-auto pr-1"></div>
@@ -99,19 +100,20 @@
                     <option value="Dia 1">🔵 Día 1: En espera en Oficina</option>
                     <option value="Dia 2">🟡 Día 2: Solicitud de Rescate (Requiere Firma)</option>
                     <option value="Dia 3">🔴 Día 3: Plazo vencido (Retornar a Origen)</option>
+                    <option value="Entregado">🟢 Entregado con Éxito al Cliente</option>
                 </select>
             </div>
 
             <div id="seccionFirmaModal" class="space-y-1 hidden">
                 <div class="flex justify-between items-center">
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase">Firma del Cliente (Día 2)</label>
+                    <label id="etiquetaFirma" class="block text-[11px] font-bold text-gray-500 uppercase">Firma Obligatoria</label>
                     <button type="button" onclick="limpiarFirma()" class="text-[10px] text-red-600 font-bold hover:underline">Borrar</button>
                 </div>
                 <canvas id="canvasFirma" class="w-full h-32 rounded-lg"></canvas>
             </div>
 
             <button onclick="guardarCambiosPaquete()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-xl text-xs transition shadow-md">
-                💾 Aplicar Cambios / Actualizar
+                💾 Aplicar Cambios / Procesar
             </button>
         </div>
     </div>
@@ -133,8 +135,8 @@
     </div>
 
     <script>
-        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v4')) || [];
-        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v4')) || [];
+        let DB_PAQUETES = JSON.parse(localStorage.getItem('db_paquetes_v5')) || [];
+        let DB_CLIENTES = JSON.parse(localStorage.getItem('db_clientes_v5')) || [];
         let ESTADO_FILTRO_ACTUAL = "Todos";
 
         // LIENZO DE FIRMA TÁCTIL
@@ -210,16 +212,15 @@
             }
         }
 
-        // CONTROL DE FILTROS EN LA PESTAÑA DE PAQUETES
+        // FILTROS EXTENDIDOS
         function filtrarPorEstado(nuevoEstado) {
             ESTADO_FILTRO_ACTUAL = nuevoEstado;
-            // Estilos de botones de filtro
-            ['Todos', 'Dia 1', 'Dia 2', 'Dia 3'].forEach(est => {
+            ['Todos', 'Dia 1', 'Dia 2', 'Dia 3', 'Entregado'].forEach(est => {
                 const btn = document.getElementById(`btn-f-${est}`);
                 if (est === nuevoEstado) {
                     btn.className = "py-1.5 rounded bg-white shadow-xs font-extrabold text-slate-900";
                 } else {
-                    btn.className = `py-1.5 rounded text-gray-500 ${est==='Dia 1'?'text-blue-500':est==='Dia 2'?'text-amber-500':est==='Dia 3'?'text-red-500':''}`;
+                    btn.className = `py-1.5 rounded text-gray-400 ${est==='Dia 1'?'text-blue-500':est==='Dia 2'?'text-amber-500':est==='Dia 3'?'text-red-500':est==='Entregado'?'text-green-500':''}`;
                 }
             });
             listarPaquetes();
@@ -242,7 +243,7 @@
 
             if (!clienteExistente) {
                 DB_CLIENTES.push({ id: Date.now(), nombre: nombre, telefono: telefono, incidencias: 0 });
-                localStorage.setItem('db_clientes_v4', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v5', JSON.stringify(DB_CLIENTES));
             }
 
             DB_PAQUETES.push({
@@ -255,18 +256,17 @@
                 firma: null
             });
 
-            localStorage.setItem('db_paquetes_v4', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v5', JSON.stringify(DB_PAQUETES));
             alert("✅ Paquete ingresado con éxito en Día 1.");
             document.getElementById('formRegistro').reset();
         }
 
-        // LISTAR PAQUETES CON COMPRESIÓN DE ALTO VOLUMEN
+        // LISTAR PAQUETES
         function listarPaquetes() {
             const filtro = document.getElementById('buscarPaquete').value.toLowerCase().trim();
             const contenedor = document.getElementById('contenedorPaquetes');
             contenedor.innerHTML = '';
 
-            // Filtrar primero por texto, luego por pestaña de estado
             let filtrados = DB_PAQUETES.filter(p => p.guia.toLowerCase().includes(filtro) || p.nombre.toLowerCase().includes(filtro));
             
             if (ESTADO_FILTRO_ACTUAL !== "Todos") {
@@ -274,7 +274,7 @@
             }
 
             if (filtrados.length === 0) {
-                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay paquetes bajo este filtro.</p>`;
+                contenedor.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">No hay registros.</p>`;
                 return;
             }
 
@@ -288,6 +288,9 @@
                 } else if (p.estado === "Dia 3") {
                     colorClase = "border-red-500 bg-red-50/50";
                     textoEstado = "🔴 Día 3: Devuelto a Origen";
+                } else if (p.estado === "Entregado") {
+                    colorClase = "border-green-500 bg-green-50/50";
+                    textoEstado = "🟢 Entregado con Éxito";
                 }
 
                 const div = document.createElement('div');
@@ -306,7 +309,7 @@
             });
         }
 
-        // EDITAR PAQUETE EXISTENTE
+        // EDITAR / DETECTAR FIRMA DE ENTREGA
         function abrirModalEditar(idPaquete) {
             const paquete = DB_PAQUETES.find(p => p.id === idPaquete);
             if (!paquete) return;
@@ -331,8 +334,15 @@
         function evaluarLienzoFirma() {
             const estado = document.getElementById('modalEstado').value;
             const seccionFirma = document.getElementById('seccionFirmaModal');
+            const etiqueta = document.getElementById('etiquetaFirma');
+
             if (estado === "Dia 2") {
                 seccionFirma.classList.remove('hidden');
+                etiqueta.textContent = "✍️ Firma del Cliente (Día 2)";
+                ajustarCanvas();
+            } else if (estado === "Entregado") {
+                seccionFirma.classList.remove('hidden');
+                etiqueta.textContent = "✍️ Firma del Cliente (Recibido Conformidad)";
                 ajustarCanvas();
             } else {
                 seccionFirma.classList.add('hidden');
@@ -349,7 +359,8 @@
             const paquete = DB_PAQUETES[paqueteIndex];
             paquete.estado = nuevoEstado;
 
-            if (nuevoEstado === "Dia 2") {
+            // Recolectar firma si es Día 2 o Entregado
+            if (nuevoEstado === "Dia 2" || nuevoEstado === "Entregado") {
                 const copiaCanvas = document.createElement('canvas');
                 copiaCanvas.width = canvas.width;
                 copiaCanvas.height = canvas.height;
@@ -358,18 +369,19 @@
                 }
             }
 
+            // Reportar incidencia si vence
             if (nuevoEstado === "Dia 3") {
                 const cliente = DB_CLIENTES.find(c => c.telefono === paquete.telefono || c.nombre.toLowerCase() === paquete.nombre.toLowerCase());
                 if (cliente) {
                     cliente.incidencias += 1;
-                    localStorage.setItem('db_clientes_v4', JSON.stringify(DB_CLIENTES));
+                    localStorage.setItem('db_clientes_v5', JSON.stringify(DB_CLIENTES));
                 }
             }
 
-            localStorage.setItem('db_paquetes_v4', JSON.stringify(DB_PAQUETES));
+            localStorage.setItem('db_paquetes_v5', JSON.stringify(DB_PAQUETES));
             cerrarModalEditar();
             listarPaquetes();
-            alert("🔄 Paquete actualizado.");
+            alert("🔄 Estatus del paquete actualizado.");
         }
 
         function cerrarModalEditar() {
@@ -377,7 +389,7 @@
             limpiarFirma();
         }
 
-        // PESTAÑA 3: LISTADO DE PERSONAS CON FUNCIÓN DE LIMPIEZA / PERDÓN
+        // PESTAÑA 3: CLIENTES
         function listarClientes() {
             const filtro = document.getElementById('buscarCliente').value.toLowerCase().trim();
             const contenedor = document.getElementById('contenedorClientes');
@@ -390,7 +402,6 @@
                 let textoMarca = "🟢 Limpio";
                 let botonLimpiar = "";
 
-                // Si tiene incidencias, se le añade el botón para "Perdonar / Limpiar"
                 if (c.incidencias > 0) {
                     colorMarca = "bg-red-100 text-red-800 font-bold";
                     textoMarca = `⚠️ REINCIDENTE (${c.incidencias})`;
@@ -417,19 +428,18 @@
             });
         }
 
-        // FUNCIÓN NUEVA: LIMPIAR HISTORIAL DEL CLIENTE
         function limpiarPenalizacion(idCliente) {
             const index = DB_CLIENTES.findIndex(c => c.id === idCliente);
             if (index === -1) return;
 
             if (confirm(`¿Estás seguro de limpiar el historial de ${DB_CLIENTES[index].nombre}? Volverá a estar libre de incidencias.`)) {
                 DB_CLIENTES[index].incidencias = 0;
-                localStorage.setItem('db_clientes_v4', JSON.stringify(DB_CLIENTES));
+                localStorage.setItem('db_clientes_v5', JSON.stringify(DB_CLIENTES));
                 listarClientes();
             }
         }
 
-        // CONTROL DEL ESCÁNER CÁMARA
+        // ESCÁNER
         let html5QrcodeScanner;
         function alternarEscaner() {
             const lectorDiv = document.getElementById('lector-qr');
